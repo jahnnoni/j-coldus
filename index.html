@@ -193,6 +193,7 @@ textarea.io{width:100%;min-height:110px;background:var(--bg);color:var(--fg);bor
 .cat .n{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat .s{font-family:var(--mono);font-size:10px;color:var(--fg2);white-space:nowrap}
 .cat .s .w{color:var(--warn)}
+.li.imp .imp-nf{color:var(--warn)}
 .cat[aria-pressed="true"]{border-color:var(--brand);background:rgba(143,208,255,.08)}
 .cat .face{position:absolute;top:-8px;right:6px;width:16px;height:16px;display:none}
 .cat[aria-pressed="true"] .face{display:block}
@@ -1743,15 +1744,37 @@ let impPrev=null;
    as entradas viram estorno (devolução no cartão), nunca renda */
 let impMeio=null;
 const impM=()=>ctById(impMeio)?impMeio:padId();
-const impAplica=t=>{const m=impM();if(!m)return t;t.meio=m;if(isCard(m)&&t.tipo==='in'){t.cat='Estorno';delete t.link}return t};
-function prepImport(text){text=String(text||'').trim();if(!text)return;
-  let j=null;const i=text.indexOf('{"app"')>=0?text.indexOf('{"app"'):text.indexOf('{');if(i>=0){try{j=JSON.parse(text.slice(i))}catch(e){j=null}}
-  if(j&&(j.estado||j.config)){impPrev={kind:'backup',j};sheetDados();return}
-  let list=[],bad=0;
-  if(j){const arr=j.lancamentos||j.tx||[];list=arr.filter(t=>t&&/^\d{4}-\d{2}-\d{2}$/.test(t.d||'')&&Math.abs(Number(t.v))>0).map(t=>{const o={d:t.d,v:Math.abs(Number(t.v)),tipo:['in','out','tr'].includes(t.tipo)?t.tipo:'out',cat:t.cat||'',desc:t.desc||'',meio:ctById(t.meio)?t.meio:padId()};if(t.link)o.link=t.link;if(t.fat)o.fat=t.fat;if(!o.cat)o.cat=o.tipo==='in'?'Outra entrada':guessCat(o.desc);return o});bad=arr.length-list.length}
-  else{const r=parseExtrato(text);list=r.list.map(t=>impAplica({...t,cat:t.tipo==='in'?'Outra entrada':guessCat(t.desc||'')}));bad=r.bad}
-  if(!list.length){toast(bad?`Não li nenhum lançamento: ${bad} linha${bad>1?'s':''} sem data ou valor.`:'Não encontrei lançamentos. Confira se há data e valor.');return}
-  impPrev={kind:'tx',items:classify(list),bad};sheetDados()}
+/* importação (13/11/2026): o "meio" de cada linha pode ser o código interno ou o NOME da conta, do cartão ou do benefício
+   (sem diferença de maiúscula nem de acento; "Cartão Roxo" e "Roxo" valem). Linha sem conta própria cai no destino
+   escolhido ("O extrato é de" e, na prévia, "Lançar em"); nome que não existe fica marcado "conta não encontrada" e
+   também cai no destino. Extrato de cartão: as entradas viram estorno (devolução no cartão), nunca renda */
+const nmCt=s=>nrm(s).replace(/\s+/g,' ').trim(),semCartao=s=>s.replace(/^cartao\s+/,'');
+const ctAcha=v=>{if(v==null||String(v).trim()==='')return null;if(ctById(v))return v;const a=nmCt(v),b=semCartao(a);
+  const c=CT().find(x=>{const n=nmCt(x.nome);return n===a||n===b||semCartao(n)===b});return c?c.id:null};
+/* categoria escrita com outra caixa ou sem acento vira a do app */
+const catAcha=c=>{const cs=(S.cfg&&S.cfg.cats)||[];if(!c||cs.some(x=>x.id===c))return c;const k=nmCt(c),h=cs.find(x=>nmCt(x.n)===k||nmCt(x.id)===k);if(h)return h.id;return ['Outra entrada','Estorno','Renda'].find(x=>nmCt(x)===k)||c};
+/* acha o primeiro bloco JSON com dados no texto colado: tolera texto antes e depois e a cerca ```json ... ``` */
+function fechaJSON(s,i){let d=0,q=false,e=false;for(let k=i;k<s.length;k++){const c=s[k];if(q){if(e)e=false;else if(c==='\\')e=true;else if(c==='"')q=false;continue}
+  if(c==='"')q=true;else if(c==='{'||c==='[')d++;else if(c==='}'||c===']'){d--;if(!d)return k}}return -1}
+function achaJSON(s){const fe=s.match(/```[a-zA-Z]*\s*([\s\S]*?)```/),fontes=fe?[fe[1],s]:[s];
+  for(const f of fontes){let n=0;for(let i=0;i<f.length&&n<80;i++){const c=f[i];if(c!=='{'&&c!=='[')continue;n++;const e=fechaJSON(f,i);if(e<0)continue;
+    let j=null;try{j=JSON.parse(f.slice(i,e+1))}catch(x){continue}
+    if(Array.isArray(j))j=j.some(t=>t&&typeof t==='object'&&'d' in t)?{lancamentos:j}:null;
+    if(j&&typeof j==='object'&&(j.estado||j.config||Array.isArray(j.lancamentos)||Array.isArray(j.tx)))return j;i=e}}return null}
+/* monta a prévia com o destino da vez; as escolhas feitas à mão (marcar e desmarcar) continuam */
+function impClass(P){const d=ctById(P.dest)?P.dest:padId();
+  const list=P.raw.map((r,k)=>{const t={...r,_k:k};if(!t.meio){if(d)t.meio=d;if(isCard(d)&&t.tipo==='in'){t.cat='Estorno';delete t.link}}return t});
+  P.items=classify(list).map(x=>{const k=x.t._k;delete x.t._k;x.k=k;if(!P.raw[k].meio)x.dest=true;if(P.sc[k])x.sc=P.sc[k];if(k in P.man)x.skip=P.man[k];return x})}
+function prepImport(text,arq){text=String(text||'').trim();if(!text)return;
+  const j=achaJSON(text);
+  if(j&&(j.estado||j.config)){if(arq==='ext'){toast('Este arquivo é um backup completo. Para trazer ele, use Ajustes › Dados › Restaurar de arquivo.');return}impPrev={kind:'backup',j};sheetDados();return}
+  let raw=[],bad=0;const sc={};
+  if(j){const arr=j.lancamentos||j.tx||[];raw=arr.filter(t=>t&&/^\d{4}-\d{2}-\d{2}$/.test(t.d||'')&&Math.abs(Number(t.v))>0).map(t=>{const o={d:t.d,v:Math.abs(Number(t.v)),tipo:['in','out','tr'].includes(t.tipo)?t.tipo:'out',cat:catAcha(t.cat||''),desc:t.desc||''},m=ctAcha(t.meio);if(m)o.meio=m;else if(t.meio!=null&&String(t.meio).trim())o.sc=String(t.meio).trim();if(t.link)o.link=t.link;if(t.fat)o.fat=t.fat;if(!o.cat)o.cat=o.tipo==='in'?'Outra entrada':guessCat(o.desc);return o});bad=arr.length-raw.length;
+    raw.forEach((o,k)=>{if(o.sc){sc[k]=o.sc;delete o.sc}})}
+  else{if(/^\s*[\[{]/.test(text)||/```/.test(text)){toast('Não consegui ler o JSON. Confira se ele veio inteiro, do { até o último }.');return}
+    const r=parseExtrato(text);raw=r.list.map(t=>({...t,cat:t.tipo==='in'?'Outra entrada':guessCat(t.desc||'')}));bad=r.bad}
+  if(!raw.length){toast(bad?`Não li nenhum lançamento: ${bad} linha${bad>1?'s':''} sem data ou valor.`:'Não encontrei lançamentos. Confira se há data e valor.');return}
+  impPrev={kind:'tx',raw,sc,man:{},dest:impM(),bad};impClass(impPrev);sheetDados()}
 function restore(j){const st=j.estado?JSON.parse(JSON.stringify(j.estado)):{v:3,cfg:j.config,tx:(j.lancamentos||[]).map(t=>({...t})),fat:j.fat||{},metaLock:{}};
   if(!st.cfg||!Array.isArray(st.tx)||!Array.isArray(st.cfg.rendas))return false;st.v=3;st.tx.forEach(t=>{if(!t.id)t.id=uid()});const bk=S.bk;S=st;if(bk&&(!S.bk||bk>S.bk))S.bk=bk;migrate();return true}
 function prevHtml(P){
@@ -1760,9 +1783,11 @@ function prevHtml(P){
   const it=P.items,on=it.filter(x=>!x.skip),lg=on.filter(x=>x.st==='liga').length,fora=it.length-on.length,rep=it.filter(x=>x.skip&&(x.st==='dup'||x.parece)).length;
   const res=[pl(on.length-lg,'novo','novos'),lg?pl(lg,'ligado a previsões','ligados a previsões'):'',rep?pl(rep,'talvez repetido','talvez repetidos'):'',fora-rep?pl(fora-rep,'desmarcado','desmarcados'):'',P.bad?pl(P.bad,'linha não lida','linhas não lidas'):''].filter(Boolean).join(' · ');
   const why=x=>x.st==='dup'?'duplicado':x.parece?'talvez repetido: '+esc(x.parece):x.st==='liga'?'ligado a '+esc(x.alvo):esc(x.t.cat);
-  const row=x=>{const k=it.indexOf(x),nm=esc(x.t.desc||x.t.cat);return `<div class="li imp"${x.skip?' style="opacity:.55"':''}><button class="chk" type="button" data-act="impskip" data-i="${k}" aria-pressed="${!x.skip}" aria-label="Incluir ${nm}, ${ddmm(x.t.d)}">${x.skip?'':'✓'}</button><div class="l"><span>${nm}</span><small>${ddmm(x.t.d)} · ${why(x)}</small></div><div class="r ${x.t.tipo==='in'?'in':''}">${x.t.tipo==='in'?'+':'−'}${nb(x.t.v)}</div></div>`};
-  return `<div class="card" id="imp-prev"><b style="font-weight:500">Conferir antes de importar</b><p class="note">${res}</p>${(()=>{/* v24: conta ou cartão onde os lançamentos do extrato entram (com um só, ele) */
-     const O=[...contasB(),...cards()],d=P.dest&&ctById(P.dest)?P.dest:padId();return O.length>1?`<p class="lbl" id="imp-g-d" style="margin:8px 0 0">Lançar em</p><div class="seg3 aj-ch" role="group" aria-labelledby="imp-g-d">${O.map(o=>`<button type="button" data-act="impdest" data-v="${esc(o.id)}" aria-pressed="${d===o.id}">${esc(ctNome(o))}</button>`).join('')}</div>`:''})()}<div class="list">${it.map(row).join('')}</div>
+  const onde=x=>{const c=ctById(x.t.meio);return x.sc?` · <span class="imp-nf">conta não encontrada (${esc(x.sc)})${c?', vai para '+esc(ctNome(c)):''}</span>`:c?' · '+esc(ctNome(c)):''};
+  const row=x=>{const k=it.indexOf(x),nm=esc(x.t.desc||x.t.cat);return `<div class="li imp"${x.skip?' style="opacity:.55"':''}><button class="chk" type="button" data-act="impskip" data-i="${k}" aria-pressed="${!x.skip}" aria-label="Incluir ${nm}, ${ddmm(x.t.d)}">${x.skip?'':'✓'}</button><div class="l"><span>${nm}</span><small>${ddmm(x.t.d)} · ${why(x)}${onde(x)}</small></div><div class="r ${x.t.tipo==='in'?'in':''}">${x.t.tipo==='in'?'+':'−'}${nb(x.t.v)}</div></div>`};
+  const nd=it.filter(x=>x.dest).length,nf=it.filter(x=>x.sc).length;
+  return `<div class="card" id="imp-prev"><b style="font-weight:500">Conferir antes de importar</b><p class="note">${res}${nf?' · '+pl(nf,'conta não encontrada','contas não encontradas'):''}</p>${(()=>{/* conta, cartão ou benefício onde entram as linhas sem conta própria (com um só, ele; sem linha assim, não aparece) */
+     const O=CT(),d=P.dest&&ctById(P.dest)?P.dest:padId();return O.length>1&&nd?`<p class="lbl" id="imp-g-d" style="margin:8px 0 0">Lançar em</p>${nd<it.length?`<p class="note" style="margin:2px 0 0">Vale para ${pl(nd,'linha','linhas')} sem conta própria${nf?' ou com conta não encontrada':''}.</p>`:''}<div class="seg3 aj-ch" role="group" aria-labelledby="imp-g-d">${O.map(o=>`<button type="button" data-act="impdest" data-v="${esc(o.id)}" aria-pressed="${d===o.id}">${esc(ctNome(o))}</button>`).join('')}</div>`:''})()}<div class="list">${it.map(row).join('')}</div>
    <div class="row" style="gap:8px"><button class="btn p" type="button" data-act="impok" style="flex:1" ${on.length?'':'disabled'}>Importar ${pl(on.length,'lançamento','lançamentos')}</button><button class="btn" type="button" data-act="impno">Cancelar</button></div></div>`}
 /* v21 lote 3b: backup em arquivo (fica só no aparelho ou onde a pessoa guardar). "Último backup" grava ao salvar o arquivo ou copiar */
 const bkDias=()=>S.bk?Math.round((parse(TODAY)-parse(S.bk))/864e5):null;
@@ -1780,9 +1805,9 @@ function sheetDados(){
    <p class="note">Backup em arquivo: em Ajustes › Dados.</p>
    <div class="sec"><h3>Backup e Claude</h3><p class="note">Copia o resumo do ciclo e o backup completo em texto. Para restaurar, cole o texto no campo Colar dados, mais abaixo.</p>
      <button class="btn p" type="button" data-act="copyexp">Copiar dados</button><textarea class="io" id="exp" readonly aria-label="Dados exportados" onfocus="this.select()">${esc(exportText())}</textarea><p class="note" id="expmsg" role="status"></p></div>
-   <div class="sec"><h3>Importar extrato do banco</h3><p class="note">No app do seu banco ou do cartão, exporte o extrato em CSV ou OFX e escolha o arquivo aqui. Você confere antes de entrar.</p>
+   <div class="sec"><h3>Importar extrato do banco</h3><p class="note">No app do seu banco ou do cartão, exporte o extrato em CSV ou OFX e escolha o arquivo aqui. Também serve o arquivo .json que a IA montou. Você confere antes de entrar.</p>
      ${CT().length>1?`<p class="lbl" id="imp-g" style="margin:4px 0 0">O extrato é de</p><div class="seg3 aj-ch" role="group" aria-labelledby="imp-g">${CT().map(x=>`<button type="button" data-act="impmeio" data-v="${esc(x.id)}" aria-pressed="${impM()===x.id}">${esc(ctNome(x))}</button>`).join('')}</div>`:''}
-     <label class="btn filebtn">Escolher arquivo CSV ou OFX<input type="file" id="fext" accept=".csv,.ofx,.txt,text/csv"></label></div>
+     <label class="btn filebtn">Escolher arquivo CSV ou OFX<input type="file" id="fext" accept=".csv,.ofx,.txt,.json,text/csv,application/json"></label></div>
    <div class="sec"><h3>Colar dados</h3><p class="note">Backup do J-Coldus, dados devolvidos pelo Claude (JSON) ou linhas de extrato com data e valor.</p>
      <textarea class="io" id="imp" placeholder='{"lancamentos":[…]} ou 10/11/2026;Angeloni;-158,59' aria-label="Dados para importar"></textarea>
      <button class="btn" type="button" data-act="impaste">Importar o que colei</button></div>`);
@@ -2075,11 +2100,11 @@ document.addEventListener('click',e=>{
   else if(a==='bkfile')bkFile();
   else if(a==='bkgo')sheetAjustes('dados');
   else if(a==='impaste'){const txt=$('#imp').value.trim();if(!txt)return;prepImport(txt)}
-  else if(a==='impskip'){const x=impPrev&&impPrev.items[+b.dataset.i];if(x){x.skip=!x.skip;sheetDados()}}
+  else if(a==='impskip'){const x=impPrev&&impPrev.items[+b.dataset.i];if(x){x.skip=!x.skip;if(impPrev.man&&x.k!=null)impPrev.man[x.k]=x.skip;sheetDados()}}
   else if(a==='impno'){impPrev=null;sheetDados()}
   else if(a==='impok'){const P=impPrev;if(!P)return;
     if(P.kind==='backup'){const und=snapUndo();if(restore(P.j)){impPrev=null;resetL();closeSheet();toast('Backup restaurado',und)}else toast('Backup inválido: faltam dados')}
-    else{const add=P.items.filter(x=>!x.skip).map(x=>({id:uid(),meio:(P.dest&&ctById(P.dest)?P.dest:padId()),...x.t})),lg=P.items.filter(x=>x.st==='liga'&&!x.skip).length,sk=P.items.filter(x=>x.skip).length,dp=0;add.forEach(t=>S.tx.push(t));migrate();const ids=add.map(t=>t.id);impPrev=null;closeSheet();
+    else{const add=P.items.filter(x=>!x.skip).map(x=>{const t={id:uid(),...x.t};if(!ctById(t.meio))t.meio=padId();return t}),lg=P.items.filter(x=>x.st==='liga'&&!x.skip).length,sk=P.items.filter(x=>x.skip).length,dp=0;add.forEach(t=>S.tx.push(t));migrate();const ids=add.map(t=>t.id);impPrev=null;closeSheet();
       toast([pl(add.length-lg,'lançamento novo','lançamentos novos'),lg?pl(lg,'ligado a previsões','ligados a previsões'):'',dp?pl(dp,'duplicado ficou fora','duplicados ficaram fora'):'',sk?pl(sk,'ficou fora','ficaram fora'):'',P.bad?pl(P.bad,'linha não lida','linhas não lidas'):''].filter(Boolean).join(', '),()=>{S.tx=S.tx.filter(t=>!ids.includes(t.id))})}}
   else if(a==='hcy'){hideToast();hAll=false;hOff=Math.max(-12,Math.min(futOff(),hOff+Number(b.dataset.k)));hCat='';render();$('#view').scrollTop=0;refocus(b)}
   else if(a==='htipo'){const m=b.dataset.m;hTipo=m==='all'||hTipo===m?'all':m;if(hTipo==='in')hCat='';render();refocus(b)}
@@ -2094,7 +2119,9 @@ document.addEventListener('click',e=>{
   /* v24: aba Cartão com mais de um cartão: escolher qual; sem cartão: abre Ajustes e a folha do cartão novo */
   else if(a==='cardsel'){cardSel=b.dataset.c;barSel=null;render();const n=$(`#view [data-act="cardsel"][data-c="${CSS.escape(cardSel)}"]`);if(n)n.focus({preventScroll:true})}
   else if(a==='addcard'){ajScroll=0;sheetAjustes('contas');addCt('credito')}
-  else if(a==='impdest'){if(impPrev){impPrev.dest=b.dataset.v;sheetDados()}}
+  else if(a==='impdest'){if(impPrev&&impPrev.kind==='tx'){impPrev.dest=b.dataset.v;impClass(impPrev);sheetDados()}}
+  /* "O extrato é de": vale para o próximo arquivo e, com a prévia aberta, para as linhas dela sem conta própria */
+  else if(a==='impmeio'){impMeio=b.dataset.v;if(impPrev&&impPrev.kind==='tx'){impPrev.dest=impMeio;impClass(impPrev)}sheetDados()}
   else if(a==='fatbar'){barSel=b.dataset.c;render();refocus(b)}
   else if(a==='fpsave'){const cs=b.dataset.c,cc=b.dataset.cc||curCC(),F=fatById(cs,cc),s=fatStat(F),vs=$('#fp-v').value.trim(),rs=$('#fp-r').value.trim(),d=$('#fp-d').value||TODAY,err=m=>{$('#fp-e').textContent=m};
     const v=vs?pnum(vs):0,rv=rs?pnum(rs):null;
@@ -2230,7 +2257,7 @@ document.addEventListener('change',e=>{const el=e.target;
     store();renderTabs();sheetCt(i);sh.scrollTop=st;return}
   /* v21 lote 3b: restaurar de arquivo passa pela mesma prévia do restaurar por texto */
   if(el.id==='fbk'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{const txt=String(fr.result);let j=null;try{j=JSON.parse(txt)}catch(e){j=null}if(j&&(j.estado||j.config))prepImport(txt);else toast('Este arquivo não é um backup do J-Coldus')};fr.readAsText(el.files[0],'utf-8');return}
-  if(el.id==='fext'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>prepImport(String(fr.result));fr.readAsText(el.files[0],'utf-8');return}
+  if(el.id==='fext'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{prepImport(String(fr.result),'ext');el.value=''};fr.readAsText(el.files[0],'utf-8');return}
   if(!el.dataset||!el.dataset.k||el.tagName==='BUTTON')return;const k=el.dataset.k,f=el.dataset.f,obj=k==='cfg'?S.cfg:k==='ap'?S.cfg.aporte:S.cfg[k][Number(el.dataset.i)];if(!obj)return;
   let val=el.value;
   /* valores: nunca negativos; texto que não é número mantém o valor anterior */
