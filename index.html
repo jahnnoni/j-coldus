@@ -61,6 +61,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   #phone .toast{top:calc(4px + env(safe-area-inset-top,0px))}
   /* PWA no iPhone: a barra de status é transparente (black-translucent); o conteúdo começa abaixo dela */
   .phone{padding-top:env(safe-area-inset-top,0px)}
+  /* 16/11/2026: o app ocupa a tela inteira e fixo; a página por trás não rola (antes sobrava uma faixa escura embaixo) */
+  html,body{overflow:hidden}
+  .phone{position:fixed;inset:0;width:auto;height:auto}
 }
 .view{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
 .view::-webkit-scrollbar{width:0}
