@@ -6,7 +6,9 @@
 (function(){['gesturestart','gesturechange'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},{passive:false})});
 var m=document.querySelector('meta[name=viewport]'),base=m.content;
 document.addEventListener('focusin',function(e){if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))m.content=base+', maximum-scale=1'},true);
-document.addEventListener('focusout',function(){m.content=base},true)})();</script>
+document.addEventListener('focusout',function(){m.content=base},true);
+/* app instalado (Tela de Início): altura real da tela, na vertical */
+if(navigator.standalone){var R=document.documentElement;R.classList.add('ios-app');var setH=function(){R.style.setProperty('--appH',(innerWidth<innerHeight?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height))+'px')};setH();addEventListener('resize',setH);addEventListener('orientationchange',setH)}})();</script>
 <title>J-Coldus</title>
 <meta name="description" content="Anote o que entra e o que sai e veja quanto ainda dá para gastar no mês. Os dados ficam só no aparelho.">
 <!-- PWA: app instalável (manifest), ícones e barra de status do iPhone. Tudo servido da própria pasta: nenhum pedido a servidor externo. -->
@@ -62,8 +64,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   /* PWA no iPhone: a barra de status é transparente (black-translucent); o conteúdo começa abaixo dela */
   .phone{padding-top:env(safe-area-inset-top,0px)}
   /* 16/11/2026: o app ocupa a tela inteira e fixo; a página por trás não rola (antes sobrava uma faixa escura embaixo) */
-  html,body{overflow:hidden}
+  html,body{overflow:hidden;background:var(--bg)}
   .phone{position:fixed;inset:0;width:auto;height:auto}
+  /* app instalado no iPhone: com a barra de status transparente, o iOS informa a tela mais baixa
+     (falta a altura da barra de status) e sobrava uma faixa embaixo; usa a altura real da tela */
+  html.ios-app .phone{bottom:auto;height:var(--appH,100%)}
 }
 .view{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
 .view::-webkit-scrollbar{width:0}

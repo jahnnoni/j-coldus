@@ -2,7 +2,7 @@
    Os dados (lançamentos, PIN) não passam por aqui: ficam no IndexedDB do navegador.
    Ao publicar uma versão nova do app, aumente VERSAO: o aparelho baixa tudo de novo e apaga a cópia antiga.
    A versão nova vale a partir da próxima vez que o app abrir. Nenhum pedido sai para outro servidor. */
-const VERSAO = 'j-coldus-v4';
+const VERSAO = 'j-coldus-v5';
 const ARQUIVOS = [
   './',
   './index.html',
