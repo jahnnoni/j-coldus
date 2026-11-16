@@ -1,6 +1,12 @@
 <html lang="pt-BR">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>/* iPhone (16/11/2026): sem zoom de pinça e sem o zoom automático ao tocar num campo.
+   A pinça é bloqueada pelo gesto; o zoom do campo, travando a escala só enquanto um campo está em foco. */
+(function(){['gesturestart','gesturechange'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},{passive:false})});
+var m=document.querySelector('meta[name=viewport]'),base=m.content;
+document.addEventListener('focusin',function(e){if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))m.content=base+', maximum-scale=1'},true);
+document.addEventListener('focusout',function(){m.content=base},true)})();</script>
 <title>J-Coldus</title>
 <meta name="description" content="Anote o que entra e o que sai e veja quanto ainda dá para gastar no mês. Os dados ficam só no aparelho.">
 <!-- PWA: app instalável (manifest), ícones e barra de status do iPhone. Tudo servido da própria pasta: nenhum pedido a servidor externo. -->
@@ -33,6 +39,8 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+/* app de celular: sem zoom de pinça nem de toque duplo, e sem o "quique" da página (16/11/2026) */
+html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--page);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.4;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
