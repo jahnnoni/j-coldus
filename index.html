@@ -170,7 +170,7 @@ input.chipin{flex:none;min-height:40px;padding:0 10px;border:1px solid var(--fb)
 .bars .bl{font-family:var(--mono);font-size:10px;color:var(--fg2);line-height:1;height:12px}
 .bars .col.hi .bl{color:var(--brand)}
 .bars .col.fut .bl{opacity:.4}
-.bars .avg{position:absolute;left:0;right:0;border-top:1px dashed var(--fb);pointer-events:none}
+/* v25: a linha tracejada da média saiu do gráfico do Mês; a comparação fica no balão */
 .chart .bars{gap:0}
 .chart .bars .col i{width:calc(100% - 6px)}
 .bars .col:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
@@ -180,6 +180,7 @@ input.chipin{flex:none;min-height:40px;padding:0 10px;border:1px solid var(--fb)
 .chtip{position:absolute;z-index:3;top:2px;width:min(220px,68%);display:flex;flex-direction:column;gap:5px;text-align:left;padding:9px 11px 10px;background:var(--field);border:1px solid var(--fb);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.45);animation:ctin .16s var(--ease)}
 .chtip.l{left:0}
 .chtip.r{right:0}
+.chtip.b{left:0;right:0;width:auto;top:calc(100% + 6px)}
 @keyframes ctin{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
 @media (prefers-reduced-motion:reduce){.chtip{animation:none}}
 .chtip .ct-t{font-size:12px;color:var(--fg2);line-height:1.2}
@@ -192,7 +193,27 @@ input.chipin{flex:none;min-height:40px;padding:0 10px;border:1px solid var(--fb)
 .chtip .ct-b i{display:block;height:100%;background:var(--brand)}
 .chtip .ct-r .num{font-family:var(--mono);font-size:12px;color:var(--fg);text-align:right}
 .chtip .ct-e{font-size:13px;color:var(--fg2)}
-.avgk{display:inline-block;width:12px;border-top:1px dashed var(--fg2);vertical-align:middle;margin-right:6px}
+.chtip .ct-m{font-size:12px;line-height:1.25;color:var(--fg2)}.chtip .ct-m.up{color:var(--warn)}.chtip .ct-m.dn{color:var(--ok)}
+.chwk{display:flex;align-items:center;justify-content:space-between;margin:0 -10px -6px}.chwk .lbl{font-size:12px}
+.bars:has(.chtip)+.chft>span:first-child{visibility:hidden} /* v25 dev.1: com o balão aberto, a frase do rodapé some (o balão cobria) */
+.hi-nw{white-space:nowrap} /* v25 dev.1: "Lido como": cada parte inteira, quebra só entre as partes */
+.chft{gap:10px;align-items:flex-start}.chft .chtop{flex:none;white-space:nowrap}
+/* v25: Montar histórico (Ajustes › Dados) */
+.hi-passo{margin:-2px 0 0}
+.hi-lido{gap:4px}.hi-lido b{font-weight:500}.hi-arq{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hi-g h3{margin-top:10px}
+.li.hi-r{align-items:flex-start}.li.hi-r .r{padding-top:12px}.li.hi-r.off .l,.li.hi-r.off .r{opacity:.6}
+.li.hi-r .l small{white-space:normal}
+.li.hi-r .chip{align-self:flex-start;margin-top:6px;max-width:100%}
+.li.hi-i .l{padding-left:2px}
+.hi-chs{flex-wrap:wrap;overflow:visible}
+.hi-q{gap:6px}.hi-sug{gap:4px}.hi-sug b{font-weight:500}.hi-sl{font-size:13px;color:var(--fg2)}
+.hi-ai{gap:8px;justify-content:flex-start;align-items:center}.hi-ai .chip{flex:1 1 0;justify-content:center;min-width:44px}
+.hi-nav{gap:8px}.hi-nav .btn{flex:1 1 0}
+.sheet>.aj-ft.hi-ft>.btn.p{margin-top:24px} /* v25 dev.3: no fim da rolagem, 24 px entre o último item e o Continuar (a sombra do botão preso não cobre a marca de seleção) */
+.li.hi-r .r.hi-mot{font-size:13px;color:var(--fg2);white-space:nowrap}
+.sheet>.aj-ft>.btn.p+.hi-nav{position:relative;z-index:3} /* Voltar e Cancelar por cima da sombra do botão principal, com a borda de cima inteira */
+.hi-cats .li{min-height:48px}.hi-cats .li[aria-pressed="true"]{color:var(--brand)}
 .icons{display:flex;align-items:center}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal .wd{font-size:10px;color:var(--fg2);text-align:center;font-family:var(--mono)}
@@ -249,6 +270,7 @@ textarea.io{width:100%;min-height:110px;background:var(--bg);color:var(--fg);bor
 .alert .acts{display:flex;gap:8px;padding-left:19px}
 .btn{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fb);font-size:13px;display:inline-flex;align-items:center;justify-content:center}
 .btn.p{background:var(--btn);border-color:var(--btn);color:var(--btn-t);font-weight:500}
+.btn.p:disabled{background:var(--line);border-color:var(--line);color:var(--fg2);cursor:default} /* v25 dev.1: desabilitado não parece ativo (mesmo padrão do .save:disabled) */
 .btn.d{border-color:rgba(235,122,138,.6);color:var(--danger)}
 .lnk{color:var(--brand);text-decoration:underline;text-underline-offset:3px;min-height:40px;padding:0 4px}
 .list{display:flex;flex-direction:column}
@@ -1296,51 +1318,83 @@ function vMes(v){
 }
 
 /* gráfico de gastos: dia da semana, semana (segunda a domingo) e mês */
-let chMode='dow',chSel=null;
+let chMode='dow',chSel=null,chWk=null,chWkNow=null;/* v25: chWk = semana escolhida no "Dia da semana" (null = a de hoje ou a última do ciclo) */
 /* gasto variável: mesma regra do "Pode gastar" (sem contas fixas ligadas e sem aporte) */
 const isVar=t=>t.tipo==='out'&&!isAp(t)&&!t.link&&!t.pid;
 function chartData(cy,isNow){
   const sp=d=>S.tx.filter(t=>t.d===d&&isVar(t)).reduce((a,t)=>a+t.v,0);
   const s=parse(cy.start),e=parse(cy.end),days=[];
   for(let d=new Date(s);d<=e;d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1))days.push(iso(d));
-  const DN=['segundas','terças','quartas','quintas','sextas','sábados','domingos'];
-  if(chMode==='dow'){const v=[0,0,0,0,0,0,0],n=[0,0,0,0,0,0,0],ds=[[],[],[],[],[],[],[]];days.forEach(d=>{if(d<=TODAY){const i=(parse(d).getDay()+6)%7;v[i]+=sp(d);n[i]++;ds[i].push(d)}});
-    const hi=isNow?(parse(TODAY).getDay()+6)%7:-1;
-    return {bars:['seg','ter','qua','qui','sex','sáb','dom'].map((l,i)=>({l,v:n[i]?v[i]/n[i]:0,hi:i===hi,days:ds[i],t:`${n[i]} ${n[i]===1?DN[i].slice(0,-1):DN[i]}`,avg:1})),med:days.filter(d=>d<=TODAY).reduce((a,d)=>a+sp(d),0)/Math.max(1,days.filter(d=>d<=TODAY).length)}}
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  /* v25: "Dia da semana" = o gasto real de cada dia de UMA semana (segunda a domingo); setas trocam a semana.
+     Dia futuro ou fora do ciclo: barra vazia e desabilitada. Média do balão = os outros dias com o mesmo dia da semana
+     no ciclo, até ontem (dia sem gasto conta 0), sem o próprio dia */
+  if(chMode==='dow'){const W=chWeeks(cy),lim=TODAY<cy.end?TODAY:cy.end;let last=0;W.forEach((w,i)=>{if(w[0]<=lim)last=i});
+    const wk=chWk==null?last:Math.max(0,Math.min(last,chWk));chWkNow={wk,last,w:W[wk]};
+    const DL=['seg','ter','qua','qui','sex','sáb','dom'],DF=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+    return {bars:W[wk].map((d,i)=>{const ok=inC(d,cy)&&d<=TODAY,o=days.filter(x=>x!==d&&x<TODAY&&(parse(x).getDay()+6)%7===i);
+      return {l:DL[i],v:ok?sp(d):0,hi:d===TODAY,fut:!ok,days:[d],t:`${DF[i]}, ${ddmm(d)}`,base:ok?avg(o.map(sp)):null}})}}
+  chWkNow=null;
+  /* semana: média = as outras semanas inteiras (7 dias no ciclo) já encerradas */
   if(chMode==='wk'){const W=[];let cur=null;days.forEach(d=>{if(!cur||(parse(d).getDay()+6)%7===0){cur=[];W.push(cur)}cur.push(d)});
-    return {bars:W.map(w=>({l:ddmm(w[0]),v:w.reduce((a,d)=>a+(d<=TODAY?sp(d):0),0),hi:isNow&&TODAY>=w[0]&&TODAY<=w[w.length-1],fut:w[0]>TODAY,days:w.filter(d=>d<=TODAY),t:w.length>1?`Semana de ${ddmm(w[0])} a ${ddmm(w[w.length-1])}`:`Dia ${ddmm(w[0])}`}))}}
+    const tot=w=>w.reduce((a,d)=>a+(d<=TODAY?sp(d):0),0),fe=W.filter(w=>w.length===7&&w[6]<TODAY);
+    return {bars:W.map(w=>({l:ddmm(w[0]),v:tot(w),hi:isNow&&TODAY>=w[0]&&TODAY<=w[w.length-1],fut:w[0]>TODAY,days:w.filter(d=>d<=TODAY),nd:w.length,t:w.length>1?`Semana de ${ddmm(w[0])} a ${ddmm(w[w.length-1])}`:`Dia ${ddmm(w[0])}`,base:avg(fe.filter(x=>x!==w).map(tot))}))}}
+  /* mês: média = os outros ciclos do gráfico já encerrados */
   let bars=[];for(let k=-5;k<=0;k++){const c2=shiftCycle(cy,k);bars.push({l:c2.label.slice(0,3).toLowerCase(),v:calc(c2).vari,hi:k===0,cy:c2,t:`Ciclo de ${c2.label}`})}
   const first=bars.findIndex(b=>b.v>0);bars=bars.slice(Math.max(0,Math.min(first<0?3:first,3)));
+  /* ciclo sem nenhum gasto (antes de começar a usar o app) não entra na média */
+  bars.forEach(b=>{b.base=avg(bars.filter(x=>x!==b&&x.cy.end<TODAY&&x.v>.005).map(x=>x.v))});
   return {bars}}
+/* v25: semanas do calendário (segunda a domingo) que tocam o ciclo, com os 7 dias de cada uma */
+function chWeeks(cy){const W=[],e=cy.end;let d=parse(cy.start);d=new Date(d.getFullYear(),d.getMonth(),d.getDate()-(d.getDay()+6)%7);
+  while(iso(d)<=e){const w=[];for(let i=0;i<7;i++)w.push(iso(new Date(d.getFullYear(),d.getMonth(),d.getDate()+i)));W.push(w);d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7)}return W}
+/* v25: comparação com a média do mesmo tipo (balão). Entre −5% e +5%: na média. Sem base: nada */
+function chCmp(b){
+  const hoje=b.cy?b.cy.start<=TODAY&&TODAY<=b.cy.end:(b.days||[]).includes(TODAY);
+  /* v25 dev.2: na Semana e no Mês, a barra que contém hoje compara com a média proporcional ao tempo passado:
+     base = média × (dias da barra até hoje, inclusive) ÷ (dias da barra) */
+  if(hoje&&b.base!=null&&(b.cy||chMode==='wk')){const nd=(a,z)=>Math.round((parse(z)-parse(a))/864e5)+1;
+    const f=b.cy?nd(b.cy.start,TODAY)/nd(b.cy.start,b.cy.end):b.days.length/b.nd;
+    return chCmp0(Object.assign({},b,{base:b.base*f}),' até hoje')}
+  const o=chCmp0(b);if(!o)return null;
+  /* v25 dev.1: no Dia da semana, o dia de hoje ainda está pela metade: média inteira e avisa "até agora" */
+  if(hoje){o.v+=' até agora';o.sr+=', até agora'}return o}
+function chCmp0(b,q=''){if(b.base==null||b.fut)return null;const m=b.base,M=brl(m,0),p=m>.005?(b.v-m)/m*100:(b.v>.005?Infinity:0),r=Math.round(Math.abs(p)),de=q?`${q}, de ${M}`:` de ${M}`;
+  if(!isFinite(p))return {k:'up',v:`▲ acima da média${q} (${M})`,sr:`acima da média${de}`};
+  if(r<=5)return {k:'eq',v:`na média${q} (${M})`,sr:`na média${de}`};
+  return p>0?{k:'up',v:`▲ ${r}% acima da média${q} (${M})`,sr:`${r} por cento acima da média${de}`}:{k:'dn',v:`▼ ${r}% abaixo da média${q} (${M})`,sr:`${r} por cento abaixo da média${de}`}}
 /* balão da barra: onde foi o gasto, por categoria (as 5 maiores e o resto em "Outras") */
 function chartTip(b,i,n){
   const tx=S.tx.filter(t=>isVar(t)&&(b.cy?inC(t.d,b.cy):b.days.includes(t.d)));
   const by={};tx.forEach(t=>{by[t.cat]=(by[t.cat]||0)+t.v});
   let cs=Object.entries(by).sort((a,b2)=>b2[1]-a[1]),tot=cs.reduce((a,c)=>a+c[1],0);
   if(cs.length>6){const r=cs.slice(5).reduce((a,c)=>a+c[1],0);cs=cs.slice(0,5).concat([['Outras',r]])}
-  const al=i<n/2?'r':'l';
-  const head=`<span class="num">${brl(tot)}</span>`,tt=b.avg?`${b.t} · média ${brl(b.v,0).replace(/ /g,"\u00a0")}/dia`:b.t;
+  /* v25 dev.3: o balão do lado só quando cabe inteiro ao lado da barra tocada: a largura máxima dele é 68% das barras
+     (.chtip), então a barra tem que acabar até 32% (balão à direita) ou começar depois de 68% (à esquerda).
+     Com 3 barras ou menos, ou barra no meio, o balão vai para baixo das barras */
+  const al=n>3&&(i+1)/n<=.32?'r':n>3&&i/n>=.68?'l':'b';
+  const head=`<span class="num">${brl(tot)}</span>`,tt=b.t,m=chCmp(b);
   return `<button class="chtip ${al}" type="button" data-act="chbar" data-i="${i}" aria-expanded="true">
-    <span class="ct-t">${esc(tt)}</span><span class="ct-h">${head}</span>
+    <span class="ct-t">${esc(tt)}</span><span class="ct-h">${head}</span>${m?`<span class="ct-m ${m.k}" aria-hidden="true">${m.v}</span><span class="sr">, ${m.sr}</span>`:''}
     ${cs.length?`<span class="ct-l">${cs.map(([c,v])=>`<span class="ct-r"><span class="ct-c">${esc(c)}</span><span class="ct-b" aria-hidden="true"><i style="width:${Math.max(4,v/cs[0][1]*100).toFixed(0)}%"></i></span><span class="num">${nb(v)}</span></span>`).join('')}</span>`:'<span class="ct-e">Nenhum gasto.</span>'}<span class="sr">Toque para fechar.</span>
   </button>`}
 function chartCard(cy,isNow){
   const d=chartData(cy,isNow),bars=d.bars,past=bars.filter(b=>!b.fut&&b.v>0),mx=Math.max(1,...bars.map(b=>b.v));
-  const med=d.med!=null?d.med:past.length?past.reduce((a,b)=>a+b.v,0)/past.length:0;
   const top=past.length>1?past.reduce((a,b)=>b.v>a.v?b:a):null;
-  const name={dow:'dia',wk:'semana',mes:'ciclo'}[chMode];
   const fmt=x=>Math.round(x).toLocaleString('pt-BR');
+  /* v25: sem linha tracejada da média; a comparação exata fica no balão. Navegação de semana só no "Dia da semana" */
+  const W=chMode==='dow'?chWkNow:null,cmp=bars.some(b=>!b.fut&&b.base!=null);
+  const wkRow=W&&W.last>0?`<div class="chwk" role="group" aria-label="Semana"><button class="navb" type="button" data-act="chwk" data-k="-1" aria-label="Semana anterior" ${W.wk<=0?'disabled':''}>‹</button><span class="lbl num">semana de ${ddmm(W.w[0])} a ${ddmm(W.w[6])}</span><button class="navb" type="button" data-act="chwk" data-k="1" aria-label="Próxima semana" ${W.wk>=W.last?'disabled':''}>›</button></div>`:'';
+  const vazio=chMode==='dow'?!S.tx.some(t=>isVar(t)&&inC(t.d,cy)&&t.d<=TODAY):!past.length;
   const seg=`<div class="seg3 sm" role="group" aria-label="Gastos por"><span class="lbl" style="align-self:center;margin-right:auto">Gastos</span>${[['dow','Dia da semana'],['wk','Semana'],['mes','Mês']].map(([k,l])=>`<button type="button" data-act="chmode" data-m="${k}" aria-pressed="${chMode===k}">${l}</button>`).join('')}</div>`;
-  if(!past.length)return `<div class="card chart">${seg}<p class="note" style="padding:28px 0;text-align:center">Nenhum gasto lançado neste ciclo.</p></div>`;
-  const showAvg=past.length>1;
-  return `<div class="card chart">${seg}
-   <span class="sr" role="img" aria-label="${bars.map(b=>b.l+' '+brl(b.v,0)).join(', ')}"></span>
-   <div class="bars" role="group" aria-label="Barras do gráfico. Toque numa barra para ver por categoria">
-    ${showAvg?`<i class="avg" style="bottom:calc(${Math.min(1,med/mx)*100}% * .78 + 18px)" aria-hidden="true"></i>`:''}
-    ${bars.map((b,i)=>`<button type="button" class="col ${b.hi?'hi':''} ${b.fut?'fut':''} ${chSel===i?'sel':''}" data-act="chbar" data-i="${i}" ${b.fut?'disabled':''} aria-expanded="${chSel===i}"><span class="bv">${b.v&&!b.fut?fmt(b.v):''}</span><i style="height:${b.fut?0:b.v?Math.max(3,b.v/mx*78)+'%':'2px;background:var(--line)'}${b.fut?'%':''}"></i><span class="bl">${b.l}</span><span class="sr">, ${esc(b.t)}${b.avg?', por dia':''}, ver por categoria</span></button>`).join('')}
+  if(vazio)return `<div class="card chart">${seg}<p class="note" style="padding:28px 0;text-align:center">Nenhum gasto lançado neste ciclo.</p></div>`;
+  return `<div class="card chart">${seg}${wkRow}
+   <span class="sr" role="img" aria-label="${bars.map(b=>b.l+' '+(b.fut?'sem valor':brl(b.v,0))).join(', ')}"></span>
+   <div class="bars" role="group" aria-label="Barras do gráfico. Toque numa barra para ver por categoria${cmp?' e comparar com a média':''}">
+    ${bars.map((b,i)=>`<button type="button" class="col ${b.hi?'hi':''} ${b.fut?'fut':''} ${chSel===i?'sel':''}" data-act="chbar" data-i="${i}" ${b.fut?'disabled':''} aria-expanded="${chSel===i}"><span class="bv">${b.v&&!b.fut?fmt(b.v):''}</span><i style="height:${b.fut?0:b.v?Math.max(3,b.v/mx*78)+'%':'2px;background:var(--line)'}${b.fut?'%':''}"></i><span class="bl">${b.l}</span><span class="sr">, ${esc(b.t)}${b.fut?', sem valor':', ver por categoria'}</span></button>`).join('')}
     ${chSel!=null&&bars[chSel]&&!bars[chSel].fut?chartTip(bars[chSel],chSel,bars.length):''}
    </div>
-   <div class="row lbl"><span>${showAvg?`<span class="avgk"></span>média ${brl(med,0)} por ${name}`:''}</span>${top&&chMode!=='mes'?`<span>pesa mais: <span style="color:var(--fg)">${top.l}</span></span>`:''}</div></div>`}
+   <div class="row lbl chft"><span>${cmp?(top&&chMode!=='mes'?'Toque numa barra para comparar':'Toque numa barra para comparar com a média'):''}</span>${top&&chMode!=='mes'?`<span class="chtop">pesa mais: <span style="color:var(--fg)">${top.l}</span></span>`:''}</div></div>`}
 
 /* Orçamento */
 function vOrc(v){
@@ -1829,6 +1883,284 @@ function sheetDados(){
      <button class="btn" type="button" data-act="impaste">Importar o que colei</button></div>`);
   if(impPrev)$('#sheet').scrollTop=0}
 
+/* ===== v25: Montar histórico (Ajustes › Dados) =====
+   Lê o extrato do banco (CSV ou OFX), o CSV padrão do J-Coldus (data;descricao;valor;conta, que a IA monta a partir de PDF
+   ou print) e o JSON antigo, e faz por código o que é regra: categoria lembrada, renda e conta fixa que se repetem (ligadas,
+   sem duplicar), início do mês sugerido, pagamento de fatura, transferência e aplicação fora do gasto, parcelas e duplicados.
+   A data vem sempre do arquivo (nunca "hoje"). Nada grava antes do "Importar"; depois, o Desfazer volta tudo.
+   Roda só no aparelho: nada vai para a rede. Estado na mesma variável da importação (impPrev, kind 'hist'). */
+const hND=s=>nrm(s).replace(/\d+/g,'').replace(/\s+/g,' ').trim();/* descrição normalizada: chave da categoria lembrada (S.cfg.catMem) e da repetição */
+const hW=s=>nrm(s).replace(/[^a-z]+/g,' ').trim().split(' ').filter(w=>w.length>=2);
+/* descrições parecidas: uma contém a outra, ou metade das palavras em comum */
+const hSim=(a,b)=>{const A=hW(a),B=hW(b);if(!A.length||!B.length)return false;const x=A.join(' '),y=B.join(' ');if(x.includes(y)||y.includes(x))return true;const s=new Set(B);return A.filter(w=>s.has(w)).length>=.5*Math.min(A.length,B.length)};
+/* nome (de conta, cartão, renda ou conta fixa) que aparece como palavra inteira na descrição */
+const hHit=(nome,desc)=>{const d=new Set(hW(desc));return hW(nome).filter(w=>w.length>=3).some(w=>d.has(w))};
+const hMed=a=>{const s=a.slice().sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0};
+/* dia típico: atravessando a virada do mês (28, 30, 1) vale o menor dia do fim do mês (28); senão a mediana */
+const hDia=ds=>{if(ds.some(d=>d>=22)&&ds.some(d=>d<=7)){const m=Math.min(...ds.map(d=>d<=7?d+31:d));return m>31?m-31:m}return Math.round(hMed(ds))};
+const hModa=a=>{const c={};a.forEach(x=>c[x]=(c[x]||0)+1);return Object.keys(c).sort((x,y)=>c[y]-c[x])[0]};
+const hNome=s=>{s=String(s||'').replace(/\s+/g,' ').replace(/[\s\d\-–·:*\/#.]+$/,'').trim();if(s&&s===s.toUpperCase())s=s.charAt(0)+s.slice(1).toLowerCase();return s.slice(0,30)||'Sem nome'};
+/* valor em texto: "1.234,56", "-12,50", "R$ 12,50-", "(12,50)", "12.50"; dec = separador decimal do arquivo */
+function hNum(s,dec){let x=String(s??'').replace(/ /g,' ').trim(),neg=false;if(!x)return NaN;
+  if(/^\(.*\)$/.test(x)){neg=true;x=x.slice(1,-1)}
+  x=x.replace(/R\$|BRL/gi,'').replace(/\s+/g,'');if(/^[−-]/.test(x)){neg=!neg;x=x.slice(1)}else if(x[0]==='+')x=x.slice(1);
+  if(/^R?\$?[−-]/.test(x)){neg=!neg;x=x.replace(/^R?\$?[−-]/,'')}if(/[−-]$/.test(x)){neg=!neg;x=x.slice(0,-1)}
+  if(!/^[\d.,]+$/.test(x)||!/\d/.test(x))return NaN;
+  const c=x.lastIndexOf(','),p=x.lastIndexOf('.');
+  if(c>=0&&p>=0)x=c>p?x.replace(/\./g,'').replace(',','.'):x.replace(/,/g,'');
+  else if(c>=0)x=dec==='.'&&/^\d{1,3}(,\d{3})+$/.test(x)?x.replace(/,/g,''):x.replace(/,/g,'.');
+  else if(p>=0&&dec===','&&/^\d{1,3}(\.\d{3})+$/.test(x))x=x.replace(/\./g,'');
+  const n=Number(x);return isNaN(n)?NaN:Math.round((neg?-n:n)*100)/100}
+/* data em texto: dd/mm/aaaa, dd/mm/aa, aaaa-mm-dd, aaaammdd (OFX), "10 nov 2026"; sem ano: {sa,m,d}; inválida: {bad} */
+const HMES={jan:1,fev:2,feb:2,mar:3,abr:4,apr:4,mai:5,may:5,jun:6,jul:7,ago:8,aug:8,set:9,sep:9,out:10,oct:10,nov:11,dez:12,dec:12};
+function hData(s){s=String(s??'').trim();let m;const ok=(y,mo,d)=>y>=1990&&y<=2100&&mo>=1&&mo<=12&&d>=1&&d<=lastDay(y,mo-1)?{d:y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}:{bad:1};
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?![\d])/)))return ok(+m[1],+m[2],+m[3]);
+  if((m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4}|\d{2})(?![\d])/)))return ok(m[3].length===2?2000+ +m[3]:+m[3],+m[2],+m[1]);
+  if((m=s.match(/^(\d{4})(\d{2})(\d{2})/)))return ok(+m[1],+m[2],+m[3]);
+  if((m=s.match(/^(\d{1,2})[\/.](\d{1,2})$/)))return +m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31?{sa:1,m:+m[2],d:+m[1]}:{bad:1};
+  if((m=nrm(s).match(/^(\d{1,2})\s*(?:de\s*)?([a-z]{3})[a-z]*\.?(?:\s*(?:de\s*)?(\d{4}))?$/))){const mo=HMES[m[2]];if(!mo)return null;return m[3]?ok(+m[3],mo,+m[1]):+m[1]<=31?{sa:1,m:mo,d:+m[1]}:{bad:1}}
+  return null}
+/* uma linha de CSV, com aspas ("Loja, centro") */
+function hSplit(l,sep){const o=[];let c='',q=false;for(let i=0;i<l.length;i++){const h=l[i];if(q){if(h==='"'){if(l[i+1]==='"'){c+='"';i++}else q=false}else c+=h}else if(h==='"')q=true;else if(h===sep){o.push(c);c=''}else c+=h}o.push(c);return o.map(x=>x.trim())}
+/* colunas pelo nome (sem acento e sem maiúscula) */
+function hCols(cs){const f=t=>cs.findIndex(t),I={
+  d:f(c=>c==='data'||c==='date'||c==='dt'||/^(data|date|dt)\b/.test(c)),
+  s:f(c=>/^(descricao|historico|lancamento|title|titulo|estabelecimento|memo|description|detalhe|detalhes)\b/.test(c)),
+  v:f(c=>(/^(valor|amount|quantia|value)\b/.test(c))&&!/saldo/.test(c)),
+  e:f(c=>/^(entrada|entradas|credito|creditos)\b/.test(c)),o:f(c=>/^(saida|saidas|debito|debitos)\b/.test(c)),
+  c:f(c=>c==='conta'||c==='meio'||c==='cartao'),t:f(c=>c==='tipo'||c==='d/c'||c==='dc'||c==='natureza')};
+  return I.d>=0&&I.s>=0&&(I.v>=0||I.e>=0||I.o>=0)?I:null}
+const hSaldo=d=>/^(saldo|total|s a l d o)\b|\bsaldo (anterior|do dia|final|disponivel|em conta|atual)\b|^total (da fatura|de )|^limite\b/.test(nrm(d).replace(/\s+/g,' ').trim());
+/* lê o texto e devolve as linhas (com sinal já decidido quando dá) e as que ficaram de fora */
+function hLer(text){text=String(text||'').replace(/^﻿/,'').replace(/\r\n?/g,'\n');
+  const R={rows:[],fora:[],fmt:'',card:false,amb:false,erro:''},raw=[];
+  const put=(dt,s,desc,x={})=>raw.push({dt,s,desc:String(desc||'').replace(/\s+/g,' ').trim().slice(0,80),...x});
+  if(/<STMTTRN>|<OFX>/i.test(text)){R.fmt='ofx';R.card=/<CREDITCARDMSGSRSV1>|<CCSTMTRS>/i.test(text);
+    text.split(/<STMTTRN>/i).slice(1).forEach(b=>{b=b.split(/<\/STMTTRN>/i)[0];const g=k=>((b.match(new RegExp('<'+k+'>([^<\\n]*)','i'))||[])[1]||'').trim();
+      const nm=g('NAME'),mm=g('MEMO');put(hData(g('DTPOSTED')),hNum(g('TRNAMT'),'.'),mm&&nm&&!hSim(mm,nm)?nm+' '+mm:mm||nm,{fitid:g('FITID')||null})})}
+  else if(/^\s*[\[{]/.test(text)||/```json/i.test(text)){const j=achaJSON(text);R.fmt='json';
+    if(!j){R.erro='Não consegui ler o JSON. Confira se ele veio inteiro, do { até o último }.';return R}
+    if(j.estado||j.config){R.erro='Este arquivo é um backup completo. Para trazer ele, use Ajustes › Dados › Restaurar de arquivo.';return R}
+    (j.lancamentos||j.tx||[]).forEach(t=>{if(!t||typeof t!=='object')return;const v=Math.abs(Number(t.v)),tp=['in','out','tr'].includes(t.tipo)?t.tipo:'out',x={tipo:tp,cat:catAcha(t.cat||'')};
+      const m=ctAcha(t.meio);if(m)x.meio=m;else if(t.meio!=null&&String(t.meio).trim())x.sc=String(t.meio).trim();if(t.link)x.link=t.link;if(t.fat)x.fat=t.fat;if(t.cc)x.cc=t.cc;
+      put(/^\d{4}-\d{2}-\d{2}$/.test(t.d||'')?hData(t.d):t.d?{bad:1}:null,isNaN(v)?NaN:(tp==='in'?v:-v),t.desc||'',x)})}
+  else{const L=text.split('\n').filter(l=>!/^\s*```/.test(l));let H=null,sep=null,hi=-1;
+    for(let i=0;i<Math.min(L.length,25)&&!H;i++)for(const sp of [';','\t',',','|']){const cs=hSplit(L[i],sp).map(nmCt);if(cs.length<2)continue;const I=hCols(cs);if(I){H=I;sep=sp;hi=i;H.n=cs;break}}
+    if(H){const cs=H.n,pad=cs.length<=4&&cs[H.d]==='data'&&/^descri/.test(cs[H.s])&&cs[H.v]==='valor'&&cs.every((c,i)=>[H.d,H.s,H.v,H.c].includes(i)),nu=cs.join(',')==='date,title,amount';
+      R.fmt=pad?'padrao':'banco';if(nu)R.card=true;
+      const body=L.slice(hi+1).map(l=>hSplit(l,sep)),vc=body.map(c=>[c[H.v],c[H.e],c[H.o]].filter(Boolean).join(' ')).join(' '),dec=nu?'.':(vc.match(/\d,\d{2}(?!\d)/g)||[]).length>=(vc.match(/\d\.\d{2}(?!\d)/g)||[]).length?',':'.';
+      body.forEach(c=>{if(c.every(x=>!x))return;const dt=hData(c[H.d]),desc=c[H.s]||'';let s;
+        if(H.v>=0)s=hNum(c[H.v],dec);else{const e=hNum(c[H.e],dec),o=hNum(c[H.o],dec);s=isNaN(e)&&isNaN(o)?NaN:(isNaN(e)?0:Math.abs(e))-(isNaN(o)?0:Math.abs(o))}
+        if(!isNaN(s)&&H.t>=0&&c[H.t]){const k=nmCt(c[H.t]);if(/^(d|debito|saida|s)\b/.test(k))s=-Math.abs(s);else if(/^(c|credito|entrada|e)\b/.test(k))s=Math.abs(s)}
+        if(!dt&&isNaN(s)&&!hSaldo(desc))return;
+        const x={};if(pad&&H.c>=0&&c[H.c]){const m=ctAcha(c[H.c]);if(m)x.meio=m;else x.sc=c[H.c]}
+        if(nu&&!isNaN(s))s=-s;/* fatura tipo Nubank (date,title,amount): positivo = compra */
+        put(dt,s,desc,x)});
+      if(R.fmt==='banco'&&!nu&&H.t<0&&H.v>=0&&raw.length&&!raw.some(r=>r.s<0))R.amb=true}
+    else{R.fmt='texto';
+      const MO=/(?:^|[\s;|])((?:[−-]\s*)?(?:R\$\s*)?[−-]?\d{1,3}(?:\.\d{3})*,\d{2}|(?:[−-]\s*)?(?:R\$\s*)?[−-]?\d+\.\d{2})(?![\d])/g,
+        DT=/^\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|\d{1,2}\s+(?:de\s+)?[a-zç]{3}[a-zç]*\.?(?:\s+(?:de\s+)?\d{4})?)(?=[\s;|,\t]|$)/i;
+      L.forEach(l=>{if(!l.trim())return;let m=l.match(DT),rest=l,dt=null;
+        if(m){dt=hData(m[1].replace(/\s+/g,' '));rest=l.slice(m[0].length)}else{const a=l.match(/\b(\d{2}\/\d{2}\/\d{4})\b/);if(a){dt=hData(a[1]);rest=l.replace(a[0],' ')}}
+        const ms=[...rest.matchAll(MO)],mv=ms.pop();if(!mv){if(dt&&hSaldo(rest.replace(/[;|\t]/g,' ')))put(dt,NaN,rest.replace(/[;|\t]/g,' '));return}
+        const s=hNum(mv[1].replace(/\s+/g,''),mv[1].includes(',')?',':'.');let desc=rest.slice(0,mv.index)+' '+rest.slice(mv.index+mv[0].length);
+        desc=desc.split(/[;|\t]/).map(x=>x.trim()).filter(Boolean);const cand=desc.length>1?ctAcha(desc[desc.length-1]):null,x={};if(cand){x.meio=cand;desc.pop()}
+        put(dt,s,desc.join(' '),x)});
+      if(raw.length&&!raw.some(r=>r.s<0))R.amb=true}}
+  /* datas sem ano (fatura): ano deduzido pelo período do arquivo; sem como deduzir, fica de fora */
+  const full=raw.filter(r=>r.dt&&r.dt.d).map(r=>r.dt.d).sort(),ya=(text.match(/\b(20\d\d)\b/)||[])[1];
+  raw.forEach(r=>{if(!(r.dt&&r.dt.sa))return;let best=null;
+    if(full.length){const a=full[0],b=full[full.length-1],y0=+a.slice(0,4);for(let y=y0-1;y<=+b.slice(0,4)+1;y++){const d=y+'-'+String(r.dt.m).padStart(2,'0')+'-'+String(r.dt.d).padStart(2,'0');if(+r.dt.d>lastDay(y,r.dt.m-1))continue;const dist=d<a?parse(a)-parse(d):d>b?parse(d)-parse(b):0;if(!best||dist<best[1])best=[d,dist]}}
+    else if(ya){const y=+ya;if(+r.dt.d<=lastDay(y,r.dt.m-1))best=[y+'-'+String(r.dt.m).padStart(2,'0')+'-'+String(r.dt.d).padStart(2,'0'),0]}
+    r.dt=best?{d:best[0]}:{sa:1,sem:1}});
+  raw.forEach((r,i)=>{const fo=w=>R.fora.push({k:i,desc:r.desc||'(sem descrição)',why:w,s:r.s,d:r.dt&&r.dt.d||null});
+    if(hSaldo(r.desc))return fo('linha de saldo ou total');
+    if(!r.dt||r.dt.bad)return fo('sem data válida');
+    if(r.dt.sem)return fo('data sem ano');
+    if(isNaN(r.s))return fo('sem valor');
+    if(Math.abs(r.s)<.005)return fo('valor zero');
+    R.rows.push({k:i,d:r.dt.d,v:Math.abs(r.s),tipo:r.tipo||(r.s<0?'out':'in'),desc:r.desc,...(r.meio?{meio:r.meio}:{}),...(r.sc?{sc:r.sc}:{}),...(r.fitid?{fitid:r.fitid}:{}),...(r.cat?{cat:r.cat}:{}),...(r.link?{link:r.link}:{}),...(r.fat?{fat:r.fat}:{})})});
+  if(R.fmt==='json')R.amb=false;
+  return R}
+/* fatura paga por uma linha do extrato: a do cartão com vencimento mais perto da data (até 12 dias antes ou depois) */
+function hFat(d,cc){const F0=fatOfDate(d,cc);let b=null;for(let k=-3;k<=1;k++){const F=fatShift(F0,k),x=Math.abs(parse(F.ve)-parse(d))/864e5;if(!b||x<b[1])b=[F,x]}return b[0]}
+const hFmt=P=>({padrao:'CSV do J-Coldus',banco:P.card?'fatura de cartão (CSV do banco)':'extrato de conta (CSV do banco)',ofx:P.card?'fatura de cartão (OFX)':'extrato de conta (OFX)',json:'texto da IA (JSON antigo)',texto:'linhas de extrato (texto colado)'})[P.fmt]||'extrato';
+/* monta a prévia: grupos, categoria, ligações, sugestões de "repete todo mês", início do mês e parcelas */
+function hClass(P){const mem={...(S.cfg.catMem||{}),...P.mem},C=cards(),d0=ctById(P.dest)?P.dest:padId();
+  const fatRe=/pagamento de fatura|pagamento da fatura|pagto\.? ?fatura|pgto\.? ?fatura|fatura (do )?cartao|pag\.? fatura|nupay fatura/,
+    naoRe=/mesma titularidade|transf.*\b(para|entre)\b.*\bconta|transferencia entre contas|aplicacao|resgate|\bcdb\b|\brdb\b|poupanca|caixinha|tesouro|corretora/,
+    recRe=/pagamento (recebido|efetuado)|pagto recebido|pagamento de fatura|pagamento da fatura/;
+  const own=(desc,meio)=>/\b(transf|transferencia|ted|doc|pix)\b/.test(nrm(desc))&&CT().some(x=>x.id!==meio&&hHit(x.nome,desc));
+  const why=nd=>/resgate/.test(nd)?'resgate':/aplicacao|cdb|rdb|poupanca|caixinha|tesouro|corretora/.test(nd)?'aplicação':'transferência entre contas suas';
+  const used=new Set(),seen=[],fid=new Set(),its=[];
+  P.rows.forEach(r=>{const tipo=r.tipo==='tr'?'tr':P.amb?(P.sinal==='entrada'?'in':'out'):r.tipo,meio=r.meio||d0,
+      t={d:r.d,v:r.v,tipo,desc:r.desc||'',meio,cat:r.cat||''},nd=nrm(r.desc).replace(/\s+/g,' '),it={k:r.k,t,g:'gasto',on:true};
+    if(!r.meio)it.dest=true;if(r.sc)it.sc=r.sc;if(r.link)t.link=r.link;if(r.fat)t.fat=r.fat;
+    if(tipo==='tr'){/* JSON antigo: transferência (aporte, pagamento de fatura) entra como veio */}
+    else if(isCard(meio)){if(tipo==='in'){if(recRe.test(nd)){it.g='fora';it.why='pagamento recebido no cartão'}else{t.cat='Estorno';delete t.link}}
+      else{const pm=r.desc.match(/\bparc(?:ela)?\.?\s*(\d{1,2})\s*(?:\/|de)\s*(\d{1,2})\s*$/i)||r.desc.match(/(?:^|\s)(\d{2})\/(\d{2})\s*$/);
+        if(pm&&+pm[1]>=1&&+pm[1]<=+pm[2]&&+pm[2]>=2&&+pm[2]<=48){it.g='parc';it.pn=+pm[1];it.pm=+pm[2];it.base=r.desc.slice(0,pm.index).replace(/[\s\-–·:*]+$/,'').trim()||r.desc}}}
+    else if(tipo==='out'){const kh=C.find(k=>hHit(k.nome,r.desc));
+      if(fatRe.test(nd)||(kh&&/fatura|pagamento|pgto/.test(nd))){if(!C.length){it.g='nao';it.why='pagamento de cartão (nenhum cartão no app)'}
+        else{it.g='fat';const c2=ctById(P.fcc[r.k])&&isCard(P.fcc[r.k])?P.fcc[r.k]:kh?kh.id:C.length===1?C[0].id:null;if(c2){it.cc=c2;it.F=hFat(r.d,c2)}else it.ask=true}}
+      else if(apOn()&&(P.ap[r.k]||hHit(apNome(),r.desc))){t.cat=APID;delete t.link;it.ap=!!P.ap[r.k];it.canAp=!!P.ap[r.k]}
+      else if(naoRe.test(nd)||own(r.desc,meio)){it.g='nao';it.why=why(nd);it.canAp=apOn()}}
+    else if(naoRe.test(nd)||own(r.desc,meio)){it.g='nao';it.why=why(nd)}
+    /* duplicados: no próprio arquivo (FITID do OFX ou mesmo valor, data ±1 dia e descrição parecida) e contra o que já está no app */
+    if(['gasto','fat','parc'].includes(it.g)){it.was=it.g;
+      if(r.fitid&&fid.has(r.fitid)){it.g='rep';it.why='repetido no arquivo'}
+      else if(seen.some(o=>Math.abs(o.v-t.v)<.005&&o.tipo===t.tipo&&Math.abs((parse(o.d)-parse(t.d))/864e5)<=1.01&&hSim(o.desc,t.desc))){it.g='rep';it.why='repetido no arquivo'}
+      else{const ex=S.tx.find(x=>!used.has(x.id)&&Math.abs(x.v-t.v)<.005&&(x.tipo===t.tipo||(x.tipo==='tr'&&t.tipo!=='in'))&&Math.abs((parse(x.d)-parse(t.d))/864e5)<=1.01&&hSim(x.desc||cn(x.cat),t.desc||t.cat));
+        if(ex){used.add(ex.id);it.g='rep';it.why='parece '+(ex.desc||cn(ex.cat))+', '+ddmm(ex.d)}}
+      if(it.g==='rep')it.on=false;if(r.fitid)fid.add(r.fitid);seen.push(t)}
+    /* categoria: escolhida aqui, ligação a renda ou conta fixa já cadastrada (nome e valor até 15%), a lembrada, as regras de palavras */
+    if((it.g==='gasto'||it.g==='rep')&&t.tipo!=='tr'&&t.cat!=='Estorno'&&t.cat!==APID){const pick=P.cats[r.k],mk=hND(r.desc);
+      if(pick!=null){t.cat=pick;delete t.link;it.man=true;if(pick===APID){it.ap=true}}
+      else if(!r.cat){const m=mem[mk],okm=!!m&&(tipo==='in'?['Outra entrada','Estorno'].includes(m):(ALLCATS.includes(m)||(m===APID&&apOn())));
+        const lk=tipo==='in'?S.cfg.rendas.find(x=>hHit(x.nome,r.desc)&&near(t.v,+x.v)):S.cfg.fixos.find(x=>hHit(x.nome,r.desc)&&near(t.v,+x.v));
+        if(lk){t.link=(tipo==='in'?'r:':'f:')+lk.id;t.cat=tipo==='in'?'Renda':lk.cat;it.liga=lk.nome}
+        else if(okm){t.cat=m;it.mem=true}else t.cat=tipo==='in'?'Outra entrada':guessCat(r.desc)}}
+    its.push(it)});
+  /* repete todo mês: mesma descrição em 2 ou mais meses, valores até 15% da mediana, uma vez por mês */
+  const G={};its.forEach(it=>{const t=it.t,mk=hND(t.desc);if(it.g!=='gasto'||it.man||t.tipo==='tr'||t.cat==='Estorno'||t.cat===APID||mk.length<3)return;(G[t.tipo+'|'+mk]=G[t.tipo+'|'+mk]||[]).push(it)});
+  P.sug=[];Object.entries(G).forEach(([key,L])=>{const md=hMed(L.map(x=>x.t.v)),sub=L.filter(x=>Math.abs(x.t.v-md)<=.15*md).sort((a,b)=>a.t.d.localeCompare(b.t.d)),ms=new Set(sub.map(x=>x.t.d.slice(0,7)));
+    if(ms.size<2||sub.length>ms.size)return;
+    const tipo=sub[0].t.tipo,last=sub[sub.length-1].t,ex=(tipo==='in'?S.cfg.rendas:S.cfg.fixos).find(x=>hHit(x.nome,last.desc));
+    const s={key,tipo,n:ms.size,v:Math.round(hMed(sub.map(x=>x.t.v))*100)/100,dia:hDia(sub.map(x=>+x.t.d.slice(8,10))),rows:sub,cat:tipo==='in'?'Renda':hModa(sub.map(x=>x.t.cat))};
+    const liga=(id,nome,cat)=>sub.forEach(x=>{x.t.link=(tipo==='in'?'r:':'f:')+id;x.t.cat=tipo==='in'?'Renda':cat;x.liga=nome});
+    if(ex){s.ex=ex;s.nome=ex.nome;liga(ex.id,ex.nome,ex.cat)}
+    else{s.id=P.ids[key]||(P.ids[key]=uid());s.nome=hNome(last.desc);if(P.rep[key]==='add')liga(s.id,s.nome,s.cat);
+      /* v25 dev.1: antes do "Adicionar" a prévia já mostra a categoria do grupo (Renda ou a do fixo), sem criar renda nem link */
+      else if(P.rep[key]!=='ign')sub.forEach(x=>{x.t.cat=s.cat;x.rpt=true})}
+    P.sug.push(s)});
+  /* início do mês: dia típico da maior renda que se repete (já cadastrada ou adicionada); 23 a 31 vira até 28 */
+  /* vale a maior renda que se repete no arquivo, adicionada ou não (o passo não some nem aparece quando a pessoa escolhe Adicionar ou Ignorar) */
+  const rs=P.sug.filter(s=>s.tipo==='in').sort((a,b)=>b.v-a.v)[0];
+  P.cic=rs&&Math.min(28,rs.dia)!==+S.cfg.ciclo?{dia:rs.dia,sug:Math.min(28,rs.dia),nome:s2nome(rs.nome)}:null;
+  P.cicPot=!!P.cic;
+  /* parcelas no cartão: a 1ª linha de cada compra vira sugestão de compra parcelada; já cadastrada não repete */
+  const PG={};its.filter(x=>x.g==='parc').forEach(x=>{const key=x.t.meio+'|'+hND(x.base)+'|'+x.pm+'|'+x.t.v.toFixed(2);
+    if(PG[key]){x.mesma=1;x.on=false;return}PG[key]=x;
+    const ja=S.cfg.parcelas.find(p=>pcc(p)===x.t.meio&&Math.abs(+p.v-x.t.v)<.01&&+p.n===x.pm);
+    x.pr={id:P.ids[key]||(P.ids[key]=uid()),nome:hNome(x.base),v:x.t.v,n:x.pm,cc:x.t.meio,fat1:fatShift(fatOfDate(x.t.d,x.t.meio),-(x.pn-1)).id,ant:[],cat:mem[hND(x.base)]&&ALLCATS.includes(mem[hND(x.base)])?mem[hND(x.base)]:guessCat(x.base)};
+    if(ja){x.ja=ja.nome;x.on=false}});
+  its.forEach(it=>{if(['gasto','rep','fat','parc'].includes(it.g)&&!it.mesma&&!it.ja&&it.k in P.man)it.on=P.man[it.k]});
+  P.items=its}
+const s2nome=n=>/^sal[aá]rio\b/i.test(n||'')?'Seu salário':`Sua maior renda (${n})`;
+/* o que entra ao importar (para o botão e o aviso) */
+function hConta(P){const it=P.items||[],tx=it.filter(x=>x.on&&(x.g==='gasto'||(x.g==='rep'&&x.was!=='parc'&&(x.was!=='fat'||x.cc)))).length,fp=it.filter(x=>x.on&&x.g==='fat'&&x.cc).length,pc=it.filter(x=>x.on&&(x.g==='parc'||(x.g==='rep'&&x.was==='parc'))&&x.pr).length;return {tx,fp,pc,n:tx+fp}}
+/* passos da folha: Escolher, Conferir, (Repete todo mês), (Início do mês), Saldos de hoje */
+const hPassos=P=>['esc','prev',...(P.sug&&P.sug.some(s=>!s.ex)?['rep']:[]),...(P.cicPot?['cic']:[]),'saldo'];
+const HTIT={esc:'Escolher o extrato',prev:'Conferir',rep:'Repete todo mês',cic:'Início do mês',saldo:'Saldos de hoje',cat:'Categoria'};
+function hOpen(){impPrev={kind:'hist',passo:'esc',rows:[],fora:[],man:{},cats:{},mem:{},fcc:{},ap:{},rep:{},ids:{},pa:{},sinal:null,colar:false};hRender()}
+function hRender(keep){const P=impPrev;if(!P||P.kind!=='hist')return;const sh=$('#sheet'),st=keep?sh.scrollTop:0;
+  const ps=hPassos(P),pi=ps.indexOf(P.passo==='cat'?'prev':P.passo),nx=ps[pi+1],C=hConta(P);
+  const head=`<h2 id="sheeth">Montar histórico${X}</h2><p class="lbl hi-passo">${P.passo==='cat'?'Escolha a categoria':`Passo ${pi+1}${P.fmt?' de '+ps.length:''} · ${HTIT[P.passo]}`}</p>`;
+  const imp=`Importar ${pl(C.n,'lançamento','lançamentos')}${C.pc?' e '+pl(C.pc,'compra parcelada','compras parceladas'):''}`;
+  const foot=(main,dis)=>`<div class="aj-ft hi-ft"><button class="btn p" type="button" data-act="hinext" ${dis?'disabled':''}>${main}</button><div class="row hi-nav"><button class="btn" type="button" data-act="hiback">Voltar</button><button class="btn" type="button" data-act="hicancel">Cancelar</button></div></div>`;
+  let body='';
+  if(P.passo==='esc'){const per=P.rows.length?P.rows.map(r=>r.d).sort():[],O=CT(),nd=P.rows.filter(r=>!r.meio&&!r.sc).length,nf=P.rows.filter(r=>r.sc).length;
+    body=`<p class="note">Extrato do banco (CSV ou OFX) ou o texto que a IA gerou. CSV e OFX são os arquivos de extrato que o app do banco exporta. Nada sai deste celular.</p>
+     <label class="btn filebtn">Escolher arquivo<input type="file" id="hi-file" accept=".csv,.ofx,.txt,.json,text/csv,text/plain,application/json,application/x-ofx"></label>
+     <button class="btn" type="button" data-act="hicolar" aria-expanded="${!!P.colar}">Colar texto</button>
+     ${P.colar?`<textarea class="io" id="hi-txt" aria-label="Texto do extrato ou da IA" placeholder="data;descricao;valor;conta">${esc(P.txt||'')}</textarea><button class="btn" type="button" data-act="hiler">Ler o texto</button>`:''}
+     ${P.fmt?`<div class="card hi-lido" role="status"><span>Lido como: <b>${esc(hFmt(P))}</b></span><span class="lbl num"><span class="hi-nw">${pl(P.rows.length,'linha','linhas')}</span>${per.length?` · <span class="hi-nw">de ${ddmm(per[0])}/${per[0].slice(0,4)} a ${ddmm(per[per.length-1])}/${per[per.length-1].slice(0,4)}</span>`:''}${P.fora.length?` · <span class="hi-nw">${P.fora.length} ficaram de fora</span>`:''}</span>${P.nome?`<span class="lbl hi-arq">${esc(P.nome)}</span>`:''}</div>
+      ${O.length>1&&nd+nf?`<p class="lbl" id="hi-g-d" style="margin:8px 0 0">Lançar em</p>${nd+nf<P.rows.length?`<p class="note" style="margin:2px 0 0">Vale para ${pl(nd+nf,'linha','linhas')} sem conta${nf?' ou com conta que não existe no app ('+esc([...new Set(P.rows.filter(r=>r.sc).map(r=>r.sc))].join(', '))+')':''}.</p>`:''}<div class="seg3 aj-ch" role="group" aria-labelledby="hi-g-d">${O.map(o=>`<button type="button" data-act="hidest" data-v="${esc(o.id)}" aria-pressed="${P.dest===o.id}">${esc(ctNome(o))}</button>`).join('')}</div>`:''}`:''}`;
+    return hOpenSheet(head+body+foot('Continuar',!P.rows.length),st)}
+  if(P.passo==='cat'){const x=(P.items||[]).find(i=>i.k===P.catK);if(!x){P.passo='prev';return hRender()}
+    const ops=x.t.tipo==='in'?['Outra entrada','Estorno']:[...ALLCATS,...(apOn()?[APID]:[])];
+    body=`<p class="note">${esc(x.t.desc||'Sem descrição')} · ${ddmm(x.t.d)} · ${nb(x.t.v)}</p><p class="note">O app lembra esta escolha para as próximas linhas com a mesma descrição.</p>
+     <div class="list hi-cats" role="group" aria-label="Categorias">${ops.map(c=>`<button class="li" type="button" data-act="hicatp" data-v="${esc(c)}" aria-pressed="${x.t.cat===c}"><span>${esc(cn(c))}</span><span class="r" aria-hidden="true">${x.t.cat===c?'✓':''}</span></button>`).join('')}</div>`;
+    return hOpenSheet(head+body+`<div class="aj-ft"><div class="row hi-nav"><button class="btn" type="button" data-act="hicatv" style="flex:1">Voltar</button></div></div>`,0)}
+  if(P.passo==='prev'){const it=P.items||[],G=g=>it.filter(x=>x.g===g),cat=x=>(x.g==='gasto'||x.was==='gasto')&&x.t.tipo!=='tr'?`<button class="chip t44 hi-cat" type="button" data-act="hicat" data-k="${x.k}" aria-label="Categoria de ${esc(x.t.desc||'lançamento')}: ${esc(cn(x.t.cat))}. Trocar">${esc(cn(x.t.cat))} <span aria-hidden="true">▾</span></button>`:'';
+    const onde=x=>{const c=ctById(x.t.meio);return x.sc?`<span class="imp-nf">conta não encontrada (${esc(x.sc)})${c?', vai para '+esc(ctNome(c)):''}</span>`:c&&CT().length>1?esc(ctNome(c)):''};
+    const val=x=>`<div class="r ${x.t.tipo==='in'?'in':''}">${x.t.tipo==='in'?'+':'−'}${nb(x.t.v)}</div>`;
+    const chk=x=>`<button class="chk" type="button" data-act="hion" data-k="${x.k}" aria-pressed="${!!x.on}" aria-label="Incluir ${esc(x.t.desc||'lançamento')}, ${ddmm(x.t.d)}">${x.on?'✓':''}</button>`;
+    const sm=(...a)=>`<small>${a.filter(Boolean).join(' · ')}</small>`;
+    const rowG=x=>`<div class="li imp hi-r${x.on?'':' off'}">${chk(x)}<div class="l"><span>${esc(x.t.desc||cn(x.t.cat))}</span>${sm(ddmm(x.t.d),onde(x),x.liga?'ligado a '+esc(x.liga):'',x.rpt?'repete todo mês':'',x.mem?'categoria lembrada':'',x.why?esc(x.why):'')}${cat(x)}${x.canAp?`<button class="chip t44" type="button" data-act="hiap" data-k="${x.k}" aria-pressed="${!!x.ap}">É o meu aporte</button>`:''}</div>${val(x)}</div>`;
+    /* sem cartão escolhido a linha não entra: a marca aparece vazia até escolher o cartão */
+    const rowF=x=>`<div class="li imp hi-r${x.on&&!x.ask?'':' off'}">${chk(x.ask?{...x,on:false}:x)}<div class="l"><span>${esc(x.t.desc)}</span>${sm(ddmm(x.t.d),onde(x),x.cc?`fatura de ${esc(fl(x.F))} do ${esc(ctNome(cardOf(x.cc)))}`:'')}${x.ask||cards().length>1?`<p class="lbl" id="hi-q${x.k}" style="margin:4px 0 0">${x.ask?'Qual cartão?':'Cartão'}</p><div class="chips hi-chs" role="group" aria-labelledby="hi-q${x.k}">${cards().map(k=>`<button class="chip t44" type="button" data-act="hifcc" data-k="${x.k}" data-v="${esc(k.id)}" aria-pressed="${x.cc===k.id}">${esc(ctNome(k))}</button>`).join('')}</div>`:''}${x.ask?'<small>Sem cartão escolhido, esta linha não entra.</small>':''}</div>${val(x)}</div>`;
+    const rowN=x=>`<div class="li imp hi-r hi-i"><div class="l"><span>${esc(x.t.desc||'')}</span>${sm(ddmm(x.t.d),onde(x),esc(x.why))}${x.canAp?`<button class="chip t44" type="button" data-act="hiap" data-k="${x.k}" aria-pressed="false">É o meu aporte</button>`:''}</div>${val(x)}</div>`;
+    const rowP=x=>`<div class="li imp hi-r${x.on?'':' off'}">${x.mesma||x.ja?'':chk(x)}<div class="l"><span>${esc(x.t.desc)}</span>${sm(ddmm(x.t.d),`parcela ${x.pn} de ${x.pm}`,x.mesma?'mesma compra de outra linha':x.ja?'já cadastrada ('+esc(x.ja)+')':`vira compra parcelada: ${x.pm}× ${nb(x.t.v)}, total ${nb(x.t.v*x.pm)}`)}</div>${val(x)}</div>`;
+    const rowO=o=>`<div class="li imp hi-r hi-i"><div class="l"><span>${esc(o.desc)}</span>${sm(o.d?ddmm(o.d):'',esc(o.why))}</div>${hSaldo(o.desc)||isNaN(o.s)||Math.abs(o.s)<.005?`<div class="r hi-mot">${hSaldo(o.desc)?'linha de saldo':!o.d?'sem data':isNaN(o.s)?'sem valor':'valor zero'}</div>`:`<div class="r">${o.s<0?'−':'+'}${nb(o.s)}</div>`}</div>`;
+    const sec=(id,t,arr,f,n)=>arr.length?`<section class="sec hi-g" aria-labelledby="hi-h-${id}"><h3 id="hi-h-${id}">${t} (${n!=null?n:arr.length})</h3><div class="list">${arr.map(f).join('')}</div></section>`:'';
+    const nao=G('nao'),fora=[...it.filter(x=>x.g==='fora').map(x=>({desc:x.t.desc,why:x.why,s:x.t.tipo==='in'?x.t.v:-x.t.v,d:x.t.d})),...P.fora];
+    body=`${P.amb?`<div class="card hi-q"><p id="hi-g-s" style="margin:0">Neste arquivo, valores positivos são gastos?</p><div class="seg3 aj-ch" role="group" aria-labelledby="hi-g-s"><button type="button" data-act="hisinal" data-v="gasto" aria-pressed="${P.sinal==='gasto'}">Sim</button><button type="button" data-act="hisinal" data-v="entrada" aria-pressed="${P.sinal==='entrada'}">Não</button></div>${P.sinal?'':'<p class="note">Responda para continuar.</p>'}</div>`:''}
+     <p class="note">Toque na categoria para trocar. Desmarque o que não quer trazer.</p>
+     ${sec('gasto','Gastos e entradas',G('gasto'),rowG)}${sec('parc','Compra parcelada',G('parc'),rowP)}${sec('rep','Talvez repetido',G('rep'),rowG,`${G('rep').length}, ${G('rep').length===1?'desmarcado':'desmarcados'}`)}${sec('fat','Pagamento de fatura',G('fat'),rowF)}${sec('nao','Não conta como gasto',nao,rowN)}${sec('fora','Ficou de fora',fora,rowO)}`;
+    return hOpenSheet(head+body+foot(nx==='saldo'?imp:'Continuar',P.amb&&!P.sinal||!(C.n||C.pc)),st)}
+  if(P.passo==='rep'){const L=P.sug.filter(s=>!s.ex);
+    body=`<p class="note">Estes lançamentos se repetem todo mês. Adicione como renda ou conta fixa para o app prever os próximos. Nada se duplica: as linhas do arquivo ficam ligadas a elas.</p>
+     ${L.map(s=>`<div class="card hi-sug" role="group" aria-labelledby="hi-s-${s.id}"><b id="hi-s-${s.id}">${esc(s.nome)}</b><span class="lbl">${s.tipo==='in'?'Renda':'Conta fixa · '+esc(cn(s.cat))}</span><span class="num hi-sl"><span class="hi-nw">cerca de ${brl(s.v,0)} ·</span> <span class="hi-nw">por volta do dia ${s.dia} ·</span> <span class="hi-nw">visto em ${s.n} meses</span></span>
+       <div class="row hi-ai"><button class="chip t44" type="button" data-act="hirep" data-v="add" data-k="${esc(s.key)}" aria-pressed="${P.rep[s.key]==='add'}">Adicionar</button><button class="chip t44" type="button" data-act="hirep" data-v="ign" data-k="${esc(s.key)}" aria-pressed="${P.rep[s.key]==='ign'}">Ignorar</button></div></div>`).join('')}
+     ${P.sug.some(s=>s.ex)?`<p class="note">Já cadastradas, e as linhas delas já foram ligadas: ${esc(P.sug.filter(s=>s.ex).map(s=>s.nome).join(', '))}.</p>`:''}`;
+    return hOpenSheet(head+body+foot(nx==='saldo'?imp:'Continuar',false),st)}
+  if(P.passo==='cic'){const c=P.cic;
+    body=`<div class="card hi-cic"><p style="margin:0">${esc(c.nome)} costuma cair por volta do dia ${c.dia}. Começar o mês ${c.sug===c.dia?'nesse dia':'no dia '+c.sug+' (o mais perto que o app aceita)'} faz o dinheiro e os gastos ficarem no mesmo mês.</p>
+     <div class="row hi-ai" role="group" aria-label="Início do mês do orçamento"><button class="chip t44" type="button" data-act="hicic" data-v="usar" aria-pressed="${P.cicEsc==='usar'}">Usar dia ${c.sug}</button><button class="chip t44" type="button" data-act="hicic" data-v="manter" aria-pressed="${P.cicEsc==='manter'}">Manter dia ${S.cfg.ciclo}</button></div></div>
+     <p class="note">Dá para mudar depois em Ajustes › Ciclo do mês.</p>`;
+    return hOpenSheet(head+body+foot(imp,false),st)}
+  if(P.passo==='saldo'){const A=[...contasB(),...bens()],K=cards();
+    body=`<p class="note">Pronto, o histórico entrou. Se quiser, diga quanto tem hoje em cada conta: o app parte desse valor. Pode deixar em branco.</p>
+     ${A.map(x=>{const i=CT().indexOf(x),ben=x.tipo==='beneficio';return `<div class="field"><label class="lbl" for="hi-s${i}">${esc(x.nome)} · saldo de hoje</label><span class="aj-cur"><span class="aj-rs" aria-hidden="true">R$</span><input id="hi-s${i}" class="num aj-big" inputmode="decimal" data-hs="${i}" value="${esc(P.sd&&P.sd[i]!=null?P.sd[i]:'')}" placeholder="0,00" aria-label="Saldo de hoje em ${esc(x.nome)}" autocomplete="off"></span></div>`}).join('')}
+     ${K.map(x=>{const Fn=fatNow(x.id),ops=[-6,-5,-4,-3,-2,-1].map(k=>fatShift(Fn,k)),pa=P.pa[x.id]!=null?P.pa[x.id]:x.pagasAte||'';return `<p class="lbl" id="hi-pa-${esc(x.id)}" style="margin:12px 0 0">${esc(ctNome(x))} · faturas pagas até</p><div class="seg3 aj-ch" role="group" aria-labelledby="hi-pa-${esc(x.id)}">${[['','Nenhuma'],...ops.map(F=>[F.id,fl(F)])].map(([v,l])=>`<button type="button" data-act="hipa" data-c="${esc(x.id)}" data-v="${esc(v)}" aria-pressed="${pa===v}">${l}</button>`).join('')}</div>`}).join('')}
+     ${!A.length&&!K.length?'<p class="note">Nenhuma conta cadastrada.</p>':''}`;
+    return hOpenSheet(head+body+`<div class="aj-ft"><button class="btn p" type="button" data-act="hipronto">Pronto</button><div class="row hi-nav"><button class="btn" type="button" data-act="hicancel" style="flex:1">Pular os saldos</button></div></div>`,st)}}
+function hOpenSheet(html,st){openSheet(html);const sh=$('#sheet');sh.scrollTop=st||0}
+/* lê o arquivo ou o texto colado e vai para "Lido como" */
+function hLoad(text,nome){const P=impPrev;if(!P||P.kind!=='hist')return;const R=hLer(text);
+  if(R.erro){toast(R.erro);return}
+  if(!R.rows.length&&!R.fora.length){toast('Não encontrei lançamentos. Confira se há data e valor.');return}
+  Object.assign(P,{fmt:R.fmt,card:R.card,amb:R.amb,rows:R.rows,fora:R.fora,nome:nome||'',man:{},cats:{},fcc:{},ap:{},rep:{},sinal:null,colar:false,txt:''});
+  P.dest=R.card?(cards()[0]||{}).id||padId():padId();hClass(P);hRender()}
+/* importa: lançamentos, pagamentos de fatura, compras parceladas, rendas e contas fixas novas, categoria lembrada e início do mês */
+function hImport(){const P=impPrev;if(!P||P.kind!=='hist')return;hClass(P);const und=snapUndo(),it=P.items,C=hConta(P);
+  P.sug.filter(s=>!s.ex&&P.rep[s.key]==='add').forEach(s=>{if(s.tipo==='in'){const m=s.rows[0].t.meio,o={id:s.id,nome:s.nome,v:s.v,dia:s.dia};if(m&&m!==padId()&&!isCard(m))o.meio=m;S.cfg.rendas.push(o)}else S.cfg.fixos.push({id:s.id,nome:s.nome,v:s.v,dia:s.dia,cat:s.cat})});
+  it.forEach(x=>{if(!x.on)return;const g=x.g==='rep'?x.was:x.g,t=x.t;
+    /* "Renda" só com a renda ligada: entrada que se repete e ficou sem "Adicionar" entra como Outra entrada */
+    if(g==='gasto'){const o={id:uid(),d:t.d,v:t.v,tipo:t.tipo,cat:t.tipo==='in'&&t.cat==='Renda'&&!(t.link&&linkTarget(t.link))?'Outra entrada':t.cat||(t.tipo==='in'?'Outra entrada':'Sem grupo'),meio:ctById(t.meio)?t.meio:padId(),desc:t.desc};if(t.link&&linkTarget(t.link))o.link=t.link;if(t.fat)o.fat=t.fat;S.tx.push(o)}
+    else if(g==='fat'&&x.cc)S.tx.push({id:uid(),d:t.d,v:t.v,tipo:'tr',cat:'Pagar fatura',meio:ctById(t.meio)&&!isCard(t.meio)?t.meio:(pagaDe(x.cc)||{}).id||null,cc:x.cc,fat:x.F.id,desc:t.desc});
+    else if(g==='parc'&&x.pr)S.cfg.parcelas.push({...x.pr,ant:[]})});
+  S.cfg.catMem={...(S.cfg.catMem||{}),...P.mem};
+  if(P.cic&&P.cicEsc==='usar')S.cfg.ciclo=P.cic.sug;
+  migrate();store();renderTabs();
+  toast([pl(C.n,'lançamento importado','lançamentos importados'),C.pc?pl(C.pc,'compra parcelada','compras parceladas'):''].filter(Boolean).join(' e '),und);
+  P.passo='saldo';P.sd={};hRender()}
+/* saldo de hoje: a mesma regra de Ajustes › a conta (aj-is, aj-cs): valor, data de hoje e o que já mexeu nele hoje */
+function hSaldoSet(x,raw){const ben=x.tipo==='beneficio';raw=String(raw).trim();if(!raw)return;const n=pnum(raw.replace(/^[−-]/,'')),neg=!ben&&/^[−-]/.test(raw);if(isNaN(n))return;
+  x.saldo={v:ben?Math.max(0,n):neg?-n:n,d:TODAY,ex:ben?S.tx.filter(t=>t.meio===x.id&&t.d===TODAY).map(t=>t.id):[...S.tx.filter(t=>t.d===TODAY).map(t=>t.id),...S.tx.flatMap(t=>(t.div||[]).flatMap(y=>(y.rec||[]).filter(r=>r.d===TODAY).map(r=>r.id)))]}}
+function hFoco(b){const ds=b.dataset,sel=['act','k','v','c'].filter(k=>ds[k]!=null).map(k=>`[data-${k}="${CSS.escape(ds[k])}"]`).join(''),n=$('#sheet').querySelector('button'+sel);if(n&&!n.disabled)n.focus({preventScroll:true})}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.act;if(!a||a.slice(0,2)!=='hi'&&a!=='hist')return;
+  if(a==='hist'){hOpen();return}
+  const P=impPrev;if(!P||P.kind!=='hist')return;const k=b.dataset.k!=null?+b.dataset.k:null,v=b.dataset.v;
+  const re=()=>{hClass(P);hRender(true);hFoco(b)};
+  if(a==='hicolar'){P.colar=!P.colar;hRender(true);const t=$('#hi-txt');if(t)t.focus()}
+  else if(a==='hiler'){const t=$('#hi-txt');P.txt=t?t.value:'';if(P.txt.trim())hLoad(P.txt,'')}
+  else if(a==='hidest'){P.dest=v;re()}
+  /* v25 dev.1: fatura sem cartão escolhido: a marca vazia não desliga nada em silêncio; leva à escolha do cartão */
+  else if(a==='hion'){const x=P.items.find(i=>i.k===k);if(x&&x.g==='fat'&&x.ask){const c=$(`#sheet [data-act="hifcc"][data-k="${k}"]`);if(c)c.focus();return}if(x)P.man[k]=!x.on;re()}
+  else if(a==='hicat'){P.catK=k;P.ret=$('#sheet').scrollTop;P.passo='cat';hRender()}
+  else if(a==='hicatp'){const x=P.items.find(i=>i.k===P.catK);if(x){P.cats[P.catK]=v;P.mem[hND(x.t.desc)]=v;
+      /* a mesma descrição nas outras linhas (sem escolha própria) segue a escolha */
+      P.items.forEach(y=>{if(y!==x&&hND(y.t.desc)===hND(x.t.desc)&&P.cats[y.k]==null&&y.t.tipo===x.t.tipo)P.cats[y.k]=v})}
+    P.passo='prev';hClass(P);hRender();$('#sheet').scrollTop=P.ret||0;const n=$(`#sheet [data-act="hicat"][data-k="${P.catK}"]`);if(n)n.focus({preventScroll:true})}
+  else if(a==='hicatv'){P.passo='prev';hRender();$('#sheet').scrollTop=P.ret||0;const n=$(`#sheet [data-act="hicat"][data-k="${P.catK}"]`);if(n)n.focus({preventScroll:true})}
+  else if(a==='hifcc'){P.fcc[k]=v;re()}
+  else if(a==='hiap'){P.ap[k]=!P.ap[k];if(!P.ap[k]&&P.cats[k]===APID)delete P.cats[k];re()}
+  else if(a==='hisinal'){P.sinal=v;re()}
+  else if(a==='hirep'){P.rep[b.dataset.k]=v;re()}
+  else if(a==='hicic'){P.cicEsc=v;hRender(true);hFoco(b)}
+  else if(a==='hipa'){P.pa[b.dataset.c]=v;P.sd=P.sd||{};$('#sheet').querySelectorAll('[data-hs]').forEach(n=>{P.sd[n.dataset.hs]=n.value});hRender(true);hFoco(b)}
+  else if(a==='hiback'){const ps=hPassos(P),i=ps.indexOf(P.passo);if(i<=0){impPrev=null;sheetAjustes('dados');return}P.passo=ps[i-1];hRender()}
+  else if(a==='hicancel'){closeSheet()}
+  else if(a==='hinext'){const ps=hPassos(P),nx=ps[ps.indexOf(P.passo)+1];if(P.passo==='esc'&&!P.rows.length)return;if(P.passo==='prev'&&P.amb&&!P.sinal)return;
+    if(nx==='saldo')hImport();else{P.passo=nx;hRender()}}
+  else if(a==='hipronto'){const sh=$('#sheet');sh.querySelectorAll('[data-hs]').forEach(n=>{const x=CT()[+n.dataset.hs];if(x&&x.tipo!=='credito')hSaldoSet(x,n.value)});
+    Object.entries(P.pa).forEach(([id,v])=>{const x=ctById(id);if(x&&x.tipo==='credito'){if(v)x.pagasAte=v;else delete x.pagasAte}});store();closeSheet()}});
+document.addEventListener('change',e=>{const el=e.target;if(el.id!=='hi-file'||!el.files||!el.files[0])return;const f=el.files[0];
+  /* extrato de banco às vezes vem em Latin-1 (Windows): com caractere inválido, lê de novo nessa codificação */
+  const rd=(enc,next)=>{const fr=new FileReader();fr.onload=()=>{const t=String(fr.result);if(next&&t.includes('�'))return rd(next,null);hLoad(t,f.name);el.value=''};fr.readAsText(f,enc)};rd('utf-8','windows-1252')});
+
 /* Ajustes (v17): resumo do plano e listas legíveis. Tocar num item abre a folha dele; cada campo aplica ao sair dele
    (listener change com data-k/data-i/data-f, a mesma validação de antes). "Pronto" e "‹" só voltam, na mesma rolagem. */
 let ajScroll=0,ajCur=null,ajRetParc=false;
@@ -1921,6 +2253,8 @@ function sheetAjustes(sec){const c=S.cfg,cy=cycleOf(TODAY),ml=metaOf(cy);ajCur=n
      <p class="note">Passa de novo pelos passos do começo, já com o que está salvo. Não apaga nada.</p></section>`})()}
    <section class="sec aj-dados" id="aj-dados"><div class="aj-h"><h3>Dados</h3></div>
      ${bkHtml()}
+     <button class="btn" type="button" data-act="hist">Montar histórico</button>
+     <p class="note">Extrato do banco (CSV ou OFX) ou o texto que a IA gerou.</p>
      <button class="btn" type="button" data-act="dados">Exportar e importar</button>
      <button class="btn d" type="button" data-act="zero">Começar do zero</button>
      <p class="note">Começar do zero apaga tudo: lançamentos, faturas, rendas, contas fixas, compras parceladas, tetos, contas, cartões e aporte. O app fica como na primeira vez. Dá para desfazer logo depois; para guardar uma cópia, faça um backup antes.</p>
@@ -2062,7 +2396,7 @@ document.addEventListener('click',e=>{
   if(chSel!=null&&!e.target.closest('.chart')){chSel=null;if(!b||!b.dataset.tab)render()}
   if(!b)return;
   if(!b.classList.contains('arm'))disarm();
-  if(b.dataset.tab){if(b.dataset.tab!==tab)hideToast();tab=b.dataset.tab;cyOff=0;render();$('#view').scrollTop=0;return}
+  if(b.dataset.tab){if(b.dataset.tab!==tab)hideToast();tab=b.dataset.tab;cyOff=0;chWk=null;render();$('#view').scrollTop=0;return}
   if(b.dataset.key){hideToast();const k=b.dataset.key;L.desc=$('#desc')?$('#desc').value:L.desc;L.ok2=false;
     if(L.pre){L.val='';L.pre=false}
     if(k==='del')L.val=L.val.slice(0,-1);
@@ -2104,7 +2438,8 @@ document.addEventListener('click',e=>{
   else if(a==='cal'){calDay=TODAY;calOff=0;sheetCal()}
   else if(a==='calday'){calDay=b.dataset.d;sheetCal()}
   else if(a==='calmode'){calMode=b.dataset.m;sheetCal()}
-  else if(a==='chmode'){chMode=b.dataset.m;chSel=null;render()}
+  else if(a==='chmode'){chMode=b.dataset.m;chSel=null;chWk=null;render()}
+  else if(a==='chwk'){const W=chWkNow;if(!W)return;chWk=Math.max(0,Math.min(W.last,W.wk+Number(b.dataset.k)));chSel=null;render();refocus(b)}
   else if(a==='chbar'){const i=+b.dataset.i;chSel=chSel===i?null:i;render();refocus(b)}
   else if(a==='calcy'){calOff=Math.min(futOff(),calOff+Number(b.dataset.k));const c2=shiftCycle(cycleOf(TODAY),calOff);calDay=calOff===0?TODAY:calOff>0?c2.start:c2.end;sheetCal()}
   else if(a==='copyexp'){const t=$('#exp'),m=$('#expmsg');t.focus();t.select();let ok=false;try{ok=document.execCommand('copy')}catch(err){ok=false}
@@ -2191,7 +2526,7 @@ document.addEventListener('click',e=>{
       if(!(T>=resto-.005))return err(`O total não pode ser menor que o resto (${brl(resto)}).`);
       const p={id:uid(),nome:'Resto da fatura de '+fl(F),v:Math.round(T/n*100)/100,n,fat1:N.id,ant:[],ja:Math.round(resto/n*100)/100};S.cfg.parcelas.push(p);
       t.resto={k:'parc',v:Math.round(resto*100)/100,pid:p.id};closeSheet();toast(`Parcelado: ${n}× ${brl(p.v)} a partir da fatura de ${fl(N)}`,()=>dropResto(t))}}
-  else if(a==='cy'){hideToast();cyOff=Math.max(-3,Math.min(3,cyOff+Number(b.dataset.k)));chSel=null;render()}
+  else if(a==='cy'){hideToast();cyOff=Math.max(-3,Math.min(3,cyOff+Number(b.dataset.k)));chSel=null;chWk=null;render()}
   else if(a==='avisos')sheetAvisos();
   else if(a==='paguei')sheetPay('f',b.dataset.id,b.dataset.d);
   else if(a==='recebi')sheetPay('r',b.dataset.id,b.dataset.d);
