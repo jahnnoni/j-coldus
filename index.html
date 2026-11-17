@@ -8,7 +8,7 @@ var m=document.querySelector('meta[name=viewport]'),base=m.content;
 document.addEventListener('focusin',function(e){if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))m.content=base+', maximum-scale=1'},true);
 document.addEventListener('focusout',function(){m.content=base},true);
 /* app instalado (Tela de Início): altura real da tela, na vertical */
-if(navigator.standalone){var R=document.documentElement;R.classList.add('ios-app');var setH=function(){R.style.setProperty('--appH',(innerWidth<innerHeight?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height))+'px')};setH();addEventListener('resize',setH);addEventListener('orientationchange',setH)}})();</script>
+if(navigator.standalone){var R=document.documentElement;R.classList.add('ios-app');var setH=function(){var full=innerWidth<innerHeight?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height);R.style.setProperty('--iosgap',Math.min(60,Math.max(0,full-innerHeight))+'px')};setH();addEventListener('resize',setH);addEventListener('orientationchange',setH)}})();</script>
 <title>J-Coldus</title>
 <meta name="description" content="Anote o que entra e o que sai e veja quanto ainda dá para gastar no mês. Os dados ficam só no aparelho.">
 <!-- PWA: app instalável (manifest), ícones e barra de status do iPhone. Tudo servido da própria pasta: nenhum pedido a servidor externo. -->
@@ -67,8 +67,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   html,body{overflow:hidden;background:var(--bg)}
   .phone{position:fixed;inset:0;width:auto;height:auto}
   /* app instalado no iPhone: com a barra de status transparente, o iOS informa a tela mais baixa
-     (falta a altura da barra de status) e sobrava uma faixa embaixo; usa a altura real da tela */
-  html.ios-app .phone{bottom:auto;height:var(--appH,100%)}
+     (falta a altura da barra de status). 17/11/2026: esticar o app até a altura real cortava a barra
+     de abas, porque o iOS não desenha abaixo da altura informada. O app fica na área visível; a sobra
+     embaixo já faz o papel da margem da barra de início, e a barra de abas desconta essa sobra. */
+  html.ios-app .tabs{padding-bottom:max(6px,calc(10px + env(safe-area-inset-bottom,0px) - var(--iosgap,0px)))}
 }
 .view{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
 .view::-webkit-scrollbar{width:0}
@@ -2159,7 +2161,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
     Object.entries(P.pa).forEach(([id,v])=>{const x=ctById(id);if(x&&x.tipo==='credito'){if(v)x.pagasAte=v;else delete x.pagasAte}});store();closeSheet()}});
 document.addEventListener('change',e=>{const el=e.target;if(el.id!=='hi-file'||!el.files||!el.files[0])return;const f=el.files[0];
   /* extrato de banco às vezes vem em Latin-1 (Windows): com caractere inválido, lê de novo nessa codificação */
-  const rd=(enc,next)=>{const fr=new FileReader();fr.onload=()=>{const t=String(fr.result);if(next&&t.includes('�'))return rd(next,null);hLoad(t,f.name);el.value=''};fr.readAsText(f,enc)};rd('utf-8','windows-1252')});
+  const rd=(enc,next)=>{const fr=new FileReader();fr.onload=()=>{const t=String(fr.result);if(next&&t.includes('\uFFFD'))return rd(next,null);hLoad(t,f.name);el.value=''};fr.readAsText(f,enc)};rd('utf-8','windows-1252')});
 
 /* Ajustes (v17): resumo do plano e listas legíveis. Tocar num item abre a folha dele; cada campo aplica ao sair dele
    (listener change com data-k/data-i/data-f, a mesma validação de antes). "Pronto" e "‹" só voltam, na mesma rolagem. */
